@@ -2,7 +2,7 @@
 
 Simple but powerful CSG tool based on OpenCascade ([OCE](https://github.com/tpaviot/oce) edition)
 
-This tool provides a simple command-line interface for applying boolean operations and transformations to 3D objects specified in either STEP or STL format. It is based on the [OCE](https://github.com/tpaviot/oce) CAD kernel.
+This tool provides a simple command-line interface for applying boolean operations and transformations to 3D objects specified in either STEP or STL format. It is based on the [OCE](https://github.com/tpaviot/oce) CAD kernel. It contains a convenient STL importer for converting mesh based geometries to an eqivalent BREP representation (might cause performance issues for large STL files). 
 
 ## Sample
 
