@@ -73,7 +73,7 @@ Boolean Operators, Constructive Solid Geometry (CSG):
 
 ### Requirements
 
-- C+\+ Compiler with C+\+11 support (tested with Clang, GCC, MSVC+\+ 2017 on X64 arch)
+- C+\+ Compiler with C+\+11 support (tested with Clang, GCC, MSVC+\+ 2017 on x64)
 - CMake >= 3.1
 - [OCE](https://github.com/tpaviot/oce) >= 0.18.3*
 
