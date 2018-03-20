@@ -14,7 +14,7 @@ These three lines
     
 produce this hollow cube:
 
-![](resources/img/sample.jpg)
+<img src="resources/img/sample.jpg" width="400px">
 
 To convert this resolution independent geometry to a triangulated STL file use:
 
@@ -22,7 +22,7 @@ To convert this resolution independent geometry to a triangulated STL file use:
 
 The number at the end specifies the tolerance (smaller values lead to more precise approximations). This is how the resulting STL might look like:
 
-![](resources/img/sample-stl.jpg)
+<img src="resources/img/sample-stl.jpg" width="400px">
 
 ## CLI
 
