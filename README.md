@@ -6,6 +6,8 @@ This tool provides a simple command-line interface for applying boolean operatio
 
 ## Sample
 
+To get started quickly download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64).
+
 These three lines
 
     ./occ-csg --create box -5,-5,-5,5,5,5 box.stp
