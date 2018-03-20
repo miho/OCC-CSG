@@ -28,7 +28,7 @@ The number at the end specifies the tolerance (smaller values lead to more preci
 
 To get an overview over the CLI type `./occ-csg --help`:
 
-```bash
+```
 ------------------------------------------------------------
 ------        CSG based on the OCE CAD Kernel         ------
 ------                  Version 0.1                   ------
