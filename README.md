@@ -75,7 +75,7 @@ Boolean Operators, Constructive Solid Geometry (CSG):
 - CMake >= 3.1
 - [OCE](https://github.com/tpaviot/oce) >= 0.18.3*
 
-For using `occ-csg`as independent command-line tool it is reccomended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around.
+For using `occ-csg` as independent command-line tool it is reccomended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around.
 
 #### Bash (Linux/macOS/Cygwin/other Unix-like Shell)
 
