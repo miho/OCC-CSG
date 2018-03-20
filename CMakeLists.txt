@@ -1,0 +1,20 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+
+PROJECT(occ-csg-prj)
+
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+INCLUDE(cmake/CreateExecutable.cmake)
+INCLUDE(cmake/CreateLibrary.cmake)
+
+# Find opencascade libraries
+
+FIND_PACKAGE(OCE REQUIRED)
+INCLUDE_DIRECTORIES(${OCE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+set(CMAKE_CXX_STANDARD 11) # C++11...
+set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
+set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
+
+ADD_SUBDIRECTORY(src)
