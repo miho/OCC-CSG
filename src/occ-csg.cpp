@@ -73,6 +73,9 @@
 #include <TopoDS_Wire.hxx>
 #include <TopoDS_Face.hxx>
 
+#include <Bnd_Box.hxx>
+#include <BRepBndLib.hxx>
+
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -82,8 +85,13 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <gp_GTrsf.hxx>
 
+// math
+#include <math.hxx>
+#define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
+#define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
+
 // version
-#define VERSION 0.2
+#define VERSION 0.3
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -106,6 +114,7 @@ void create(int argc, char *argv[]);
 void transform(int argc, char *argv[]);
 void convert(int argc, char *argv[]);
 void csg(int argc, char *argv[]);
+void bounds(int argc, char *argv[]);
 
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
@@ -161,6 +170,7 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--transform")==0) transform(argc,argv);
 	else if(strcmp(argv[1], "--convert")==0) convert(argc,argv);
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
+	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error();
 
@@ -521,16 +531,62 @@ void csg(int argc, char *argv[]) {
 	double stlTOL;
 
 	if(argc == 7) {
-		NUMBER_CONVERSION_ERROR ERR;
-		stlTOL = parseDouble(argv[6], &ERR);
-		if(ERR!=0) {
-			std::cerr << "ERROR: Cannot convert number, error_code: " << ERR << std::endl;
-		}
+		stlTOL = parseDouble(argv[6]);
 	} else {
 		stlTOL = 0.5;
 	}
 
 	save(argv[5], res, stlTOL);
+}
+
+void bounds(int argc, char *argv[]) {
+	if(argc < 3 || argc > 5) {
+		error();
+	}
+
+	TopoDS_Shape shape = load(argv[2]);
+
+	std::cout << "> computing bounding box" << std::endl;
+
+	std::cout << " -> approximating bounds" << std::endl;
+
+    // compute bbox on geometric object
+	double xMin,yMin,zMin,xMax,yMax, zMax = 0;
+	Standard_Real aDeflection = 0.001, deflection;
+	Bnd_Box box;
+	BRepBndLib::Add(shape, box);
+	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+	deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
+	
+	std::cout << " -> tesselating object" << std::endl;
+	// tesselation
+	BRepMesh_IncrementalMesh mesh(shape, deflection);
+
+    std::cout << " -> computing bounds" << std::endl;
+
+	// compute bbox with tesselation
+	box.SetVoid();
+	BRepBndLib::Add(shape, box);
+	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+
+	std::cout << " -> done." << std::endl;
+
+    if(argc == 3) {
+		std::cout << " -> bounds: " << xMin << ", " << yMin << ", " << zMin << ", " << xMax << ", " << yMax << ", " << zMax << std::endl;
+	} else {
+
+		double stlTOL;
+
+		if(argc == 5) {
+			stlTOL = parseDouble(argv[4]);
+		} else {
+			stlTOL = 0.5;
+		}
+
+		TopoDS_Shape boundingBox = createBox(xMin,yMin,zMin,xMax,yMax,zMax);
+		save(argv[3], boundingBox, stlTOL);
+
+	}
 }
 
 // ./occ-csg --transform translate x,y,z         file1.stp file1-translated.stp
@@ -882,4 +938,10 @@ void usage() {
 	std::cerr << " ./occ-csg --csg union file1.stp file2.stp file-out.stp" << std::endl;
 	std::cerr << " ./occ-csg --csg difference file1.stp file2.stp file-out.stp" << std::endl;
 	std::cerr << " ./occ-csg --csg intersection file1.stp file2.stp file-out.stp" << std::endl;
+	std::cerr << std::endl;
+	std::cerr << "Bounds:" << std::endl;
+	std::cerr << std::endl;
+	std::cerr << " ./occ-csg --bounds file.stp" << std::endl;
+	std::cerr << " ./occ-csg --bounds file.stp bounds.stp" << std::endl;
+
 }
