@@ -27,33 +27,37 @@
 #include <stdlib.h>
 
 // primitive objects
-#include "BRepPrimAPI_MakeCylinder.hxx"
-#include "BRepPrimAPI_MakeCone.hxx"
-#include "BRepPrimAPI_MakeBox.hxx"
-#include "BRepPrimAPI_MakeSphere.hxx"
-#include "BRepPrimAPI_MakePrism.hxx"
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeCone.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
 
 // CSG operators
-#include "BRepAlgoAPI_Cut.hxx"
-#include "BRepAlgoAPI_Fuse.hxx"
-#include "BRepAlgoAPI_Common.hxx"
+#include <BRepAlgoAPI_Cut.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepAlgoAPI_Common.hxx>
 
 // sewing & solid
-#include "BRepBuilderAPI_Sewing.hxx"
-#include "BRepBuilderAPI_MakeSolid.hxx"
+#include <BRepBuilderAPI_Sewing.hxx>
+#include <BRepBuilderAPI_MakeSolid.hxx>
 #include <TopoDS_Shell.hxx>
 #include <TopExp.hxx>
 #include <TopoDS.hxx>
 
 // STEP import and export
-#include "BRepGProp.hxx"
-#include "STEPControl_Reader.hxx"
-#include "STEPControl_Writer.hxx"
-#include "GProp_GProps.hxx"
+#include <BRepGProp.hxx>
+#include <STEPControl_Reader.hxx>
+#include <STEPControl_Writer.hxx>
+#include <GProp_GProps.hxx>
+
+// BREP import and export
+#include <BRepTools.hxx>
+#include <BRep_Builder.hxx>
 
 // STL export
-#include "StlAPI_Writer.hxx"
-#include "BRepMesh_IncrementalMesh.hxx"
+#include <StlAPI_Writer.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
 
 // STL import
 #include <RWStl.hxx>
@@ -79,7 +83,7 @@
 #include <gp_GTrsf.hxx>
 
 // version
-#define VERSION 0.1
+#define VERSION 0.2
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -265,6 +269,9 @@ TopoDS_Shape load(std::string const &filename) {
     	Reader.ReadFile(filename.c_str());
     	Reader.TransferRoots();
     	shape = Reader.OneShape();
+	} else if(endsWith(toLower(filename), ".brep")){
+		BRep_Builder b;
+		BRepTools::Read(shape, filename.c_str(), b);
 	} else {
 		unsupportedFormat(filename);
 	}
@@ -285,10 +292,13 @@ bool save(std::string const &filename, TopoDS_Shape shape, double stlTOL) {
     	twoMesh.Perform();
 		myStlWriter.Write(shape, filename.c_str());
 	} else if(endsWith(toLower(filename), ".stp") || endsWith(toLower(filename), ".step")) {
-		std::cout << " -> ignoring STL TOL: " << stlTOL << std::endl;
+		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
 		STEPControl_Writer writer;
 		writer.Transfer(shape,STEPControl_AsIs);
 		writer.Write(filename.c_str());
+	}  else if(endsWith(toLower(filename), ".brep")){
+		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
+		BRepTools::Write(shape, filename.c_str());
 	} else {
 		unsupportedFormat(filename);
 	}
