@@ -10,9 +10,9 @@ To get started quickly download a [binary release](https://github.com/miho/OCC-C
 
 These three lines
 
-    ./occ-csg --create box -5,-5,-5,5,5,5 box.stp
-    ./occ-csg --create sphere 0,0,0,6.5 sphere.stp
-    ./occ-csg --csg difference box.stp sphere.stp cut.stp
+    occ-csg --create box -5,-5,-5,5,5,5 box.stp
+    occ-csg --create sphere 0,0,0,6.5 sphere.stp
+    occ-csg --csg difference box.stp sphere.stp cut.stp
     
 produce this hollow cube:
 
@@ -20,7 +20,7 @@ produce this hollow cube:
 
 To convert this resolution independent geometry to a triangulated STL file use:
 
-    ./occ-csg --convert cut.stp cut.stl 0.1
+    occ-csg --convert cut.stp cut.stl 0.1
 
 The number at the end specifies the tolerance for the STL triangulation. Smaller values lead to better approximations. If the value is ommitted a default value (currently 0.5) will be used. This is how the resulting STL might look like:
 
