@@ -22,7 +22,7 @@ To convert this resolution independent geometry to a triangulated STL file use:
 
     ./occ-csg --convert cut.stp cut.stl 0.1
 
-The number at the end specifies the tolerance for the STL triangulation (smaller values lead to more precise approximations). This is how the resulting STL might look like:
+The number at the end specifies the tolerance for the STL triangulation. Smaller values lead to better approximations. If the value is ommitted a default value (currently 0.5) will be used. This is how the resulting STL might look like:
 
 <img src="resources/img/sample-stl.jpg" width="400px">
 
