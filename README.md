@@ -33,7 +33,7 @@ To get an overview over the CLI type `./occ-csg --help`:
 ```
 ------------------------------------------------------------
 ------        CSG based on the OCE CAD Kernel         ------
-------                  Version 0.1                   ------
+------                  Version 0.3                   ------
 ------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                www.mihosoft.eu                 ------
 ------------------------------------------------------------
@@ -41,32 +41,37 @@ To get an overview over the CLI type `./occ-csg --help`:
 
 Help & Info:
 
- ./occ-csg --help
- ./occ-csg --version
+ occ-csg --help
+ occ-csg --version
 
 Creating Primitives:
 
- ./occ-csg --create box x1,y1,z1,x2,y2,z2                    box.stp
- ./occ-csg --create sphere x1,y1,z1,r                        sphere.stp
- ./occ-csg --create cyl x1,y1,z1,r1,h                        cyl.stp
- ./occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp
+ occ-csg --create box x1,y1,z1,x2,y2,z2                    box.stp
+ occ-csg --create sphere x1,y1,z1,r                        sphere.stp
+ occ-csg --create cyl x1,y1,z1,r1,h                        cyl.stp
+ occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp
 
 Format Conversion:
 
- ./occ-csg --convert file1.stl file1.stp
- ./occ-csg --convert file1.stp file1.stl 0.1
+ occ-csg --convert file1.stl file1.stp
+ occ-csg --convert file1.stp file1.stl 0.1
 
 Geometric Transformation:
 
- ./occ-csg --transform matrix    t1,t2,t3,...,t12 file1.stp file1-transformed.stp
- ./occ-csg --transform translate x,y,z            file1.stp file1-translated.stp
- ./occ-csg --transform scale     sx,sy,sz         file1.stp file1-scaled.stp
+ occ-csg --transform matrix    t1,t2,t3,...,t12 file1.stp file1-transformed.stp
+ occ-csg --transform translate x,y,z            file1.stp file1-translated.stp
+ occ-csg --transform scale     sx,sy,sz         file1.stp file1-scaled.stp
 
 Boolean Operators, Constructive Solid Geometry (CSG):
 
- ./occ-csg --csg union file1.stp file2.stp file-out.stp
- ./occ-csg --csg difference file1.stp file2.stp file-out.stp
- ./occ-csg --csg intersection file1.stp file2.stp file-out.stp
+ occ-csg --csg union file1.stp file2.stp file-out.stp
+ occ-csg --csg difference file1.stp file2.stp file-out.stp
+ occ-csg --csg intersection file1.stp file2.stp file-out.stp
+
+Bounds:
+
+ occ-csg --bounds file.stp
+ occ-csg --bounds file.stp bounds.stp
 ```
 
 ## How to build OCC-CSG
