@@ -80,20 +80,27 @@ Bounds:
 
 - C+\+ Compiler with C+\+11 support (tested with Clang, GCC, MSVC+\+ 2017 on x64)
 - CMake >= 3.1
-- [OCE](https://github.com/tpaviot/oce) >= 0.18.3*
+- [OCE](https://github.com/tpaviot/oce) = 0.18.3*
 
 For using `occ-csg` as independent command-line tool it is recommended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around. `occ-csg` comes with the freetype headers to simplify the build process on Windows. The recommended settings are:
 
 ```
-    -DOCE_VISUALIZATION=ON
-    -DOCE_BUILD_SHARED_LIB=OFF
-    -DOCE_MULTITHREAD_LIBRARY=OPENMP
+    OCE_VISUALIZATION=ON
+    OCE_BUILD_SHARED_LIB=OFF
+    OCE_MULTITHREAD_LIBRARY=OPENMP
+```
+
+On macOS use the these additional settings:
+
+```
+    OCE_OSX_USE_COCOA=ON
 ```
 
 #### Dependencies for building OCE:
 
-- freetype: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows
-- OpenGL    if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
+- FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows
+- OpenGL:   if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
+- XQuartz:  only necessary on macOS, it might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
 
 #### Bash (Linux/macOS/Cygwin/other Unix-like Shell)
 
