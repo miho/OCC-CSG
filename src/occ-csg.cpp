@@ -1015,7 +1015,7 @@ TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]) {
 }
 
 bool isAccessible(std::string const &filename) {
-    std::ifstream infile(filename);
+    std::ifstream infile(filename.c_str());
     return infile.good();
 }
 
