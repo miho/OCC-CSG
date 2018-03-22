@@ -111,6 +111,7 @@ TopoDS_Shape createCylinder(double r, double h, double angle);
 TopoDS_Shape createCone(double r1, double r2, double h);
 TopoDS_Shape createCone(double r1, double r2, double h, double angle);
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points);
+TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &filename);
 TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r);
 TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
@@ -463,7 +464,7 @@ void create(int argc, char *argv[]) {
 		}
 
 		save(filename,shape, stlTOL);
-	} else if(strcmp(argv[2],"extrusion")==0) {
+	} else if(strcmp(argv[2],"extrusion:polygon")==0) {
 
 		if(argc != 5 && argc !=6) {
 			error();
@@ -493,6 +494,37 @@ void create(int argc, char *argv[]) {
 			stlTOL = 0.5;
 		} else {
 			stlTOL = parseDouble(argv[5]);
+		}
+
+		save(filename,shape, stlTOL);
+
+	} else if(strcmp(argv[2],"extrusion:file")==0) {
+
+		if(argc != 6 && argc !=7) {
+			error();
+		}
+
+		std::vector<std::string> values = split(argv[3], ',');
+		
+		if(values.size()!=3) {
+			error();
+		}
+
+		// first three entries define the extrusion vector (direction)
+		double ex = parseDouble(values[0]);
+		double ey = parseDouble(values[1]);
+		double ez = parseDouble(values[2]);
+
+		TopoDS_Shape shape = extrudeFile(ex,ey,ez,argv[4]);
+
+		std::string filename = argv[5];
+
+		double stlTOL;
+
+		if(argc == 7) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[6]);
 		}
 
 		save(filename,shape, stlTOL);
@@ -901,6 +933,19 @@ TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double>
 	return BRepPrimAPI_MakePrism(face, direction);
 }
 
+TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &filename) {
+
+	TopoDS_Shape face = load(filename);
+
+    gp_Vec direction;
+
+	direction.SetX(ex);
+	direction.SetY(ey);
+	direction.SetZ(ez);
+
+	return BRepPrimAPI_MakePrism(face, direction);
+}
+
 TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r) {
 	gp_Dir dir(dx,dy,dz);
 	gp_Pnt point(x,y,z);
@@ -1154,15 +1199,15 @@ void usage() {
 	std::cerr << std::endl;
 	std::cerr << "Creating Primitives:" << std::endl;
 	std::cerr << std::endl;
-	std::cerr << " occ-csg --create box x1,y1,z1,x2,y2,z2                        box.stp" << std::endl;
-	std::cerr << " occ-csg --create sphere x1,y1,z1,r                            sphere.stp" << std::endl;
-	std::cerr << " occ-csg --create cyl x1,y1,z1,r1,h                            cyl.stp" << std::endl;
-	std::cerr << " occ-csg --create 2d:circle x,y,r                              2dcircle.stp" << std::endl;
-	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                   2dpolygon.stp" << std::endl;
-	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                          2drectangle.stp" << std::endl;
-	std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"   2dtext.stp" << std::endl;
-	std::cerr << " occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,...     extrude.stp" << std::endl;
-	std::cerr << " occ-csg --create extrusion ex,ey,ez                           2dpath.stp extrude.stp" << std::endl;
+	std::cerr << " occ-csg --create box x1,y1,z1,x2,y2,z2                            box.stp" << std::endl;
+	std::cerr << " occ-csg --create sphere x1,y1,z1,r                                sphere.stp" << std::endl;
+	std::cerr << " occ-csg --create cyl x1,y1,z1,r1,h                                cyl.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
+	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
+	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
 	std::cerr << "" << std::endl;
 	std::cerr << "Format Conversion:" << std::endl;
 	std::cerr  << std::endl;
