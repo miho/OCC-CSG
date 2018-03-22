@@ -33,10 +33,11 @@ To get an overview over the CLI type `./occ-csg --help`:
 ```
 ------------------------------------------------------------
 ------        CSG based on the OCE CAD Kernel         ------
-------                  Version 0.3                   ------
+------                  Version 0.4                   ------
 ------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                www.mihosoft.eu                 ------
 ------------------------------------------------------------
+> ERROR: wrong number of args
 > USAGE:
 
 Help & Info:
@@ -46,10 +47,15 @@ Help & Info:
 
 Creating Primitives:
 
- occ-csg --create box x1,y1,z1,x2,y2,z2                    box.stp
- occ-csg --create sphere x1,y1,z1,r                        sphere.stp
- occ-csg --create cyl x1,y1,z1,r1,h                        cyl.stp
- occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp
+ occ-csg --create box x1,y1,z1,x2,y2,z2                        box.stp
+ occ-csg --create sphere x1,y1,z1,r                            sphere.stp
+ occ-csg --create cyl x1,y1,z1,r1,h                            cyl.stp
+ occ-csg --create 2d:circle x,y,r                              2dcircle.stp
+ occ-csg --create 2d:polygon x1,y1,x2,y2,...                   2dpolygon.stp
+ occ-csg --create 2d:rect x1,y1,x2,y2                          2drectangle.stp
+ occ-csg --create 2d:text font.ttf 12.0 x,y "text to render"   2dtext.stp
+ occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,...     extrude.stp
+ occ-csg --create extrusion ex,ey,ez                           2dpath.stp extrude.stp
 
 Format Conversion:
 
@@ -100,7 +106,7 @@ On macOS use the these additional settings:
 
 ##### Dependencies required by OCE:
 
-- FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows, on macOS freetype can be installed via `brew install freetype`, to build stytic freetype on Linux/macOS, use `./configure --without-zlib --without-png --without-bzip2`
+- FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows and macOS, to build static freetype on macOS, make sure to build without zlib, libpng, bzip2 and harfbuzz (otherwise it will have dynamic dependencies to these libraries)
 - OpenGL:   if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
 - XQuartz:  only necessary on macOS, it might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
 
