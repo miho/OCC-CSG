@@ -79,6 +79,16 @@
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+
+#include <gp_Circ.hxx>
+
+// fonts & text
+#include <Font_BRepFont.hxx>
+
+// TODO we have to upgrade to occt-7.2.x before using this class :(
+//#include <Font_BRepTextBuilder.hxx>
 
 // transform
 #include <BRepBuilderAPI_GTransform.hxx>
@@ -91,7 +101,7 @@
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
 // version
-#define VERSION 0.3
+#define VERSION 0.4
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -101,6 +111,10 @@ TopoDS_Shape createCylinder(double r, double h, double angle);
 TopoDS_Shape createCone(double r1, double r2, double h);
 TopoDS_Shape createCone(double r1, double r2, double h, double angle);
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points);
+TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r);
+TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
+TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
+TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 
 // minimal transform API
 TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]);
@@ -483,6 +497,134 @@ void create(int argc, char *argv[]) {
 
 		save(filename,shape, stlTOL);
 
+	} else if(strcmp(argv[2],"2d:circle")==0) {
+
+		if(argc != 5 && argc !=6) {
+			error();
+		}
+
+		std::vector<std::string> values = split(argv[3], ',');
+
+		std::vector<double> coords;
+
+		// first three entries define the extrusion vector (direction)
+		double x = parseDouble(values[0]);
+		double y = parseDouble(values[1]);
+		double r = parseDouble(values[2]);
+
+		if(values.size()!=3) {
+			error();
+		}
+
+		TopoDS_Shape shape = createCircle(x,y,0,0,0,1,r);
+
+		std::string filename = argv[4];
+
+		double stlTOL;
+
+		if(argc == 5) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[5]);
+		}
+
+		save(filename,shape, stlTOL);
+
+	} else if(strcmp(argv[2],"2d:polygon")==0) {
+
+		if(argc != 5 && argc !=6) {
+			error();
+		}
+
+		std::vector<std::string> values = split(argv[3], ',');
+
+		std::vector<double> coords;
+
+		for(size_t i = 0; i < values.size(); i++) {
+			double v = parseDouble(values[i]);
+			coords.push_back(v);
+		}
+
+		TopoDS_Shape shape = createPolygon2d(coords);
+
+		std::string filename = argv[4];
+
+		double stlTOL;
+
+		if(argc == 5) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[5]);
+		}
+
+		save(filename,shape, stlTOL);
+
+	} else if(strcmp(argv[2],"2d:rect")==0) {
+
+		if(argc != 5 && argc !=6) {
+			error();
+		}
+
+		std::vector<std::string> values = split(argv[3], ',');
+
+		if(values.size()!=4) {
+			error();
+		}
+
+		double x1 = parseDouble(values[0]);
+		double y1 = parseDouble(values[1]);
+		double x2 = parseDouble(values[2]);
+		double y2 = parseDouble(values[3]);
+
+		TopoDS_Shape shape = createRect2d(x1,y1,x2,y2);
+
+		std::string filename = argv[4];
+
+		double stlTOL;
+
+		if(argc == 5) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[5]);
+		}
+
+		save(filename,shape, stlTOL);
+
+	} else if(strcmp(argv[2],"2d:text")==0) {
+
+		if(argc != 8 && argc !=9) {
+			error();
+		}
+
+		std::string fontFileName = argv[3];
+
+		double fontSize = parseDouble(argv[4]);
+
+		std::vector<std::string> values = split(argv[5], ',');
+
+		if(values.size()!=2) {
+			error();
+		}
+
+		double x = parseDouble(values[0]);
+		double y = parseDouble(values[1]);
+
+		std::string text = argv[6];
+
+		TopoDS_Shape shape = createText2d(fontFileName, fontSize, x, y, text);
+
+		std::string filename = argv[7];
+
+		double stlTOL;
+
+		if(argc == 8) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[8]);
+		}
+
+		save(filename,shape, stlTOL);
+
 	} else error();
 
 }
@@ -759,6 +901,91 @@ TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double>
 	return BRepPrimAPI_MakePrism(face, direction);
 }
 
+TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r) {
+	gp_Dir dir(dx,dy,dz);
+	gp_Pnt point(x,y,z);
+	gp_Circ circle(gp_Ax2( point, dir), r);
+	BRepBuilderAPI_MakeEdge makeEdge(circle);
+
+    TopoDS_Wire wire = BRepBuilderAPI_MakeWire(makeEdge.Edge());
+
+	TopoDS_Shape shape;
+
+	if( !wire.IsNull()) {
+		TopoDS_Shape face = BRepBuilderAPI_MakeFace( wire );
+		if(!face.IsNull()) {
+			shape = face;
+		}
+	}
+
+	return shape;
+}
+
+TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY) {
+	std::vector<double> coords;
+
+	coords.push_back(minX); coords.push_back(minY);
+	coords.push_back(maxX); coords.push_back(minY);
+	coords.push_back(maxX); coords.push_back(maxY);
+	coords.push_back(minX); coords.push_back(maxY);
+
+	return createPolygon2d(coords);
+}
+
+TopoDS_Shape createPolygon2d(std::vector<double> const &coords) {
+	if(coords.size()%2!=0) {
+		std::cerr << "ERROR: wrong number count, must be multiples of 2, but is " << coords.size() << std::endl;
+		exit(1);
+	}
+
+    size_t numVerts = coords.size()/2;
+	std::vector<TopoDS_Vertex> vertices;
+
+	for(size_t i = 0; i < coords.size(); i+=2) {
+		gp_XYZ p;
+		p.SetCoord(coords[i+0], coords[i+1], 0);
+		vertices.push_back(BRepBuilderAPI_MakeVertex(p));
+	}
+
+	BRepBuilderAPI_MakePolygon polyMaker;
+
+	for(size_t i = 0; i < numVerts;i++) {
+		polyMaker.Add(vertices[i]);
+	}
+
+	polyMaker.Close();
+
+	if(!polyMaker.IsDone()) {
+		std::cerr << "ERROR: cannot construct polygon. Path invalid (e.g., crossing edges)" << std::endl;
+		exit(1);
+	}
+
+	TopoDS_Wire wire = polyMaker.Wire();
+
+	if(wire.IsNull()) {
+		std::cerr << "ERROR: cannot construct polygon. Path invalid (e.g., crossing edges)" << std::endl;
+		exit(1);
+	}
+
+	TopoDS_Face face = BRepBuilderAPI_MakeFace( wire );
+
+    return face;
+}
+
+TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text) {
+	Font_BRepFont fontObj(font.c_str(), fSize);
+	TopoDS_Shape shape = fontObj.RenderText(text.c_str());
+
+	gp_Trsf transformation;
+	transformation.SetTranslation(gp_Vec(x, y, 0));
+	shape = BRepBuilderAPI_GTransform(shape, transformation);
+
+	return shape;
+
+	//Font_BRepTextBuilder textBuilder;
+    //TopoDS_Shape textShape = textBuilder.Perform(font, NCollection_String(text));
+}
+
 TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]) {
 
 	gp_GTrsf tMat;
@@ -917,10 +1144,15 @@ void usage() {
 	std::cerr << std::endl;
 	std::cerr << "Creating Primitives:" << std::endl;
 	std::cerr << std::endl;
-	std::cerr << " occ-csg --create box x1,y1,z1,x2,y2,z2                    box.stp" << std::endl;
-	std::cerr << " occ-csg --create sphere x1,y1,z1,r                        sphere.stp" << std::endl;
-	std::cerr << " occ-csg --create cyl x1,y1,z1,r1,h                        cyl.stp" << std::endl;
-	std::cerr << " occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
+	std::cerr << " occ-csg --create box x1,y1,z1,x2,y2,z2                        box.stp" << std::endl;
+	std::cerr << " occ-csg --create sphere x1,y1,z1,r                            sphere.stp" << std::endl;
+	std::cerr << " occ-csg --create cyl x1,y1,z1,r1,h                            cyl.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:circle x,y,r                              2dcircle.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                   2dpolygon.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                          2drectangle.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\" 2dtext.stp" << std::endl;
+	std::cerr << " occ-csg --create extrusion ex,ey,ez,x1,y1,z1,x2,y2,z2,...     extrude.stp" << std::endl;
+	std::cerr << " occ-csg --create extrusion ex,ey,ez                           2dpath.stp extrude.stp" << std::endl;
 	std::cerr << "" << std::endl;
 	std::cerr << "Format Conversion:" << std::endl;
 	std::cerr  << std::endl;
