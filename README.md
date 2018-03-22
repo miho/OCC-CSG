@@ -82,7 +82,18 @@ Bounds:
 - CMake >= 3.1
 - [OCE](https://github.com/tpaviot/oce) >= 0.18.3*
 
-For using `occ-csg` as independent command-line tool it is recommended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around.
+For using `occ-csg` as independent command-line tool it is recommended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around. The recommended settings are:
+
+```
+    -DOCE_VISUALIZATION=ON
+    -DOCE_BUILD_SHARED_LIB=OFF
+    -DOCE_MULTITHREAD_LIBRARY=OPENMP
+```
+
+#### Dependencies for building OCE:
+
+- freetype: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows
+- OpenGL    if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
 
 #### Bash (Linux/macOS/Cygwin/other Unix-like Shell)
 
