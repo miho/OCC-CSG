@@ -95,7 +95,7 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <gp_GTrsf.hxx>
 
-// math
+// math (OCCT/OCE compliant)
 #include <math.hxx>
 #define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
