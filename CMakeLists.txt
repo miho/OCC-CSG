@@ -11,7 +11,10 @@ INCLUDE(cmake/CreateLibrary.cmake)
 
 FIND_PACKAGE(OCE REQUIRED)
 INCLUDE_DIRECTORIES(${OCE_INCLUDE_DIRS})
+
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/freetype/include")
 
 # Find openmp libraries
 
@@ -24,8 +27,8 @@ endif()
 
 # Find freetype libraries
 
-find_package(Freetype REQUIRED)
-include_directories(${FREETYPE_INCLUDE_DIRS})
+#find_package(Freetype REQUIRED)
+#include_directories(${FREETYPE_INCLUDE_DIRS})
 
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
