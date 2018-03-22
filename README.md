@@ -82,7 +82,7 @@ Bounds:
 - CMake >= 3.1
 - [OCE](https://github.com/tpaviot/oce) >= 0.18.3*
 
-For using `occ-csg` as independent command-line tool it is recommended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around. The recommended settings are:
+For using `occ-csg` as independent command-line tool it is recommended to compile OCE as static library. This will increase the `occ-csg` file size but ensures the tool can be used without carrying too many additional libraries around. `occ-csg` comes with the freetype headers to simplify the build process on Windows. The recommended settings are:
 
 ```
     -DOCE_VISUALIZATION=ON
