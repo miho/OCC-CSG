@@ -100,7 +100,7 @@ On macOS use the these additional settings:
 
 ##### Dependencies required by OCE:
 
-- FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows, on macOS freetype can be installed via `brew install freetype`, to build stytic freetype on Linux/macOS, use `./configure --without-zlib --without-png --without-bzip2`
+- FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows, on macOS freetype can be installed via `brew install freetype`, to build stytic freetype on macOS, make sure to build without zlib, libpng, bzip2 and harfbuzz
 - OpenGL:   if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
 - XQuartz:  only necessary on macOS, it might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
 
