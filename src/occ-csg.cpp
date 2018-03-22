@@ -101,7 +101,7 @@
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
 // version
-#define VERSION 0.4
+#define VERSION 0.5
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
