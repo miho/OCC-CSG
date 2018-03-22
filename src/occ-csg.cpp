@@ -522,9 +522,9 @@ void create(int argc, char *argv[]) {
 		double stlTOL;
 
 		if(argc == 7) {
-			stlTOL = 0.5;
-		} else {
 			stlTOL = parseDouble(argv[6]);
+		} else {
+			stlTOL = 0.5;
 		}
 
 		save(filename,shape, stlTOL);
