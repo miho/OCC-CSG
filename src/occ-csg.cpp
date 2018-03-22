@@ -973,6 +973,16 @@ TopoDS_Shape createPolygon2d(std::vector<double> const &coords) {
 }
 
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text) {
+
+    if(!isAccessible(font)) {
+		std::cerr << "ERROR: file '" << font << "' cannot be accessed!" << std::endl;
+		exit(1);
+	}
+
+	if(!endsWith(toLower(font), ".ttf")) {
+		unsupportedFormat(font);
+	}
+
 	Font_BRepFont fontObj(font.c_str(), fSize);
 	TopoDS_Shape shape = fontObj.RenderText(text.c_str());
 
