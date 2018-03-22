@@ -98,7 +98,7 @@ For using `occ-csg` as independent command-line tool it is recommended to compil
     OCE_MULTITHREAD_LIBRARY=OPENMP
 ```
 
-On macOS use the these additional settings:
+On macOS use these additional settings:
 
 ```
     OCE_OSX_USE_COCOA=ON
@@ -108,7 +108,7 @@ On macOS use the these additional settings:
 
 - FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows and macOS, to build static freetype on macOS, make sure to build without zlib, libpng, bzip2 and harfbuzz (otherwise it will have dynamic dependencies to these libraries)
 - OpenGL:   if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
-- XQuartz:  only necessary on macOS, it might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
+- XQuartz:  only necessary on macOS (depends on the version of macOS and OCE), it might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
 
 #### Bash (Linux/macOS/Cygwin/other Unix-like Shell)
 
