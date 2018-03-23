@@ -32,7 +32,7 @@ matrix:
 
 cache:
   - C:\projects\occ-csg\freetype-2.7.1\
-  - C:\projects\occ-csg\OCE-0.18.3\
+  - C:\projects\occ-csg\oce\
 
 install:
   # install FreeType 2.7.1
