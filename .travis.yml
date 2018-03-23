@@ -41,7 +41,7 @@ script:
     - export OUR_DIR=$(pwd)
     - echo "--- HOME: $OUT_DIR"
     - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
-    - if [ ! -f OCE-0.18.3.tar.gz ]; then tar xzf OCE-0.18.3.tar.gz; fi
+    - if [ ! -f oce-OCE-0.18.3 ]; then tar xzf OCE-0.18.3.tar.gz; fi
     - cd oce-OCE-0.18.3
     - mkdir -p build && mkdir -p installation && cd build
     - export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/
