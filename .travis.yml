@@ -26,7 +26,7 @@ matrix:
 script:
     - export OUR_DIR=$(pwd)
     - wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
-    - tar xvzf OCE-0.18.3.tar.gz
+    - tar xzf OCE-0.18.3.tar.gz
     - cd oce-OCE-0.18.3
     - mkdir build && mkdir installation && cd build
     - export OCE_INSTALL_DIR=$(pwd)/../installation
@@ -40,7 +40,7 @@ script:
       -DOCE_DATAEXCHANGE=ON \
       -DOCE_COPY_HEADERS_BUILD=ON \
       -DOCE_MULTITHREAD_LIBRARY=OPENMP \
-      -DOCE_INSTALL_PREFIX=$(pwd)/../installation
+      -DOCE_INSTALL_PREFIX="$(pwd)/../installation"
     - make -j8 && make install
     - cd $OUR_DIR
     - mkdir build && cd build
