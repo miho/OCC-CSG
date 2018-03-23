@@ -48,7 +48,7 @@ install:
   #- curl -LfsS -o OCE-0.18.3.tar.gz https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
   #- cmd.exe '/C 7z x "OCE-0.18.3.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\OCE-0.18.3 -y > nul
   - cd %APPVEYOR_BUILD_FOLDER%\
-  git clone --branch OCE-0.18.3 --depth 1 https://github.com/tpaviot/oce.git oce
+  - git clone --branch OCE-0.18.3 --depth 1 https://github.com/tpaviot/oce.git oce
   #- git clone https://github.com/tpaviot/oce.git oce
   #- cd %APPVEYOR_BUILD_FOLDER%\
   - dir
