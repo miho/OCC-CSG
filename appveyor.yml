@@ -43,12 +43,15 @@ install:
   - mkdir build && mkdir installation && cd build
   - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\
   - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
+  
   # install OCE 0.18.3 
-  - curl -LfsS -o OCE-0.18.3.tar.gz https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
-  - cmd.exe '/C 7z x "OCE-0.18.3.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\OCE-0.18.3 -y > nul
+  #- curl -LfsS -o OCE-0.18.3.tar.gz https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
+  #- cmd.exe '/C 7z x "OCE-0.18.3.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\OCE-0.18.3 -y > nul
+  - git clone https://github.com/tpaviot/oce.git oce
   - cd %APPVEYOR_BUILD_FOLDER%\
   - dir
-  - cd %APPVEYOR_BUILD_FOLDER%\OCE-0.18.3\oce-OCE-0.18.3\
+  - cd %APPVEYOR_BUILD_FOLDER%\oce
+  - git checkout OCE-0.18.3
   - dir
   - mkdir build && mkdir installation && cd build
   - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DFREETYPE_INCLUDE_DIR_freetype2=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\include\freetype2\freetype\config -DFREETYPE_INCLUDE_DIR_ft2build=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\include\freetype2 -DFREETYPE_LIBRARY_RELEASE=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\lib\freetype.lib -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\oce-OCE-0.18.3\installation\"
