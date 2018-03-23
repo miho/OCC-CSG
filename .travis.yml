@@ -31,6 +31,7 @@ before_install:
 cache:
   ccache: true
   directories:
+   - $HOME/Library/Caches/Homebrew
    - $HOME/oce-OCE-0.18.3
 
 env:
@@ -39,7 +40,7 @@ env:
   
 script:
     - export OUR_DIR=$(pwd)
-    - echo "--- HOME: $OUT_DIR"
+    - echo "home directory $OUT_DIR"
     - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
     - if [ ! -f oce-OCE-0.18.3 ]; then tar xzf OCE-0.18.3.tar.gz; fi
     - cd oce-OCE-0.18.3
