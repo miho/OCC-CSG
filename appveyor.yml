@@ -1,0 +1,86 @@
+# Build worker image (VM template)
+image: Visual Studio 2017
+
+# scripts that are called at very beginning, before repo cloning
+init:
+  - date /T & time /T
+  - git config --global core.autocrlf input
+  - cmake --version
+
+#branches:
+#  only:
+#  - master
+
+clone_depth: 5
+
+version: '{build}'
+
+platform:
+  - x64
+
+configuration:
+  - Release
+  #- Debug
+
+environment:
+  MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
+  matrix:
+    - generator: "Visual Studio 15"    
+
+matrix:
+  fast_finish: true
+
+#cache:
+#  - c:\project\fifengine-cpp-tutorials\dependencies
+
+install:
+  # install FreeType 2.7.1
+  - curl -LfsS -o freetype-2.7.1.tar.gz https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
+  - cmd.exe '/C 7z x "freetype-2.7.1.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\dependencies\freetype-2.7.1 -y > nul
+  - cd %APPVEYOR_BUILD_FOLDER%\dependencies\freetype-2.7.1\
+  - mkdir build && mkdir installation && cd build
+  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\dependencies\freetype-2.7.1\installation\"
+  - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
+  # install OCE 0.18.3 
+  - curl -LfsS -o OCE-0.18.3.zip https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
+  - 7z x OCE-0.18.3.zip -o%APPVEYOR_BUILD_FOLDER%\dependencies -y > nul
+  - cd %APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3
+  - mkdir build && mkdir installation && cd build
+  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3\installation\"
+  - MSBuild .\OCE.sln  /property:Configuration=Release /property:Platform=x64
+build_script:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  #- dir
+  ## create folder for an out-of-source-tree build: "c:\projects\build"
+  #- cd.. 
+  - mkdir build
+  - cd build
+  # generate build script
+  - dir %APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3\installation\
+  - cmake .. -G "%generator%" -DOCE_DIR=%APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3\installation\cmake
+  
+  
+  
+  # build
+  #- cmake --build . --target ALL_BUILD --config %configuration% -- /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  # install
+  #- cmake --build . --target INSTALL --config %configuration% -- /nologo
+  # package (with cpack)
+  #- cmake --build ./build --target PACKAGE --config %configuration% -- /nologo
+
+after_build:
+  # set compiler var
+  - if "%generator%"=="Visual Studio 14" (set COMPILER="VC14")
+  - if "%generator%"=="MinGW Makefiles"  (set COMPILER="MinGW") 
+  # copy required system libraries from \bin folder into \Tutorials1 folder
+  - xcopy C:\projects\build\tutorials\bin\*.* C:\projects\build\tutorials\Tutorial1
+  - rd /s /q C:\projects\build\tutorials\bin
+  # switch to project build folder and zip "tutorials" folder
+  - cd C:\projects\build
+  - 7z a -tzip -mx9 "tutorials-%APPVEYOR_BUILD_VERSION%-%COMPILER%.zip" tutorials
+  # switch to project directory and zip append the "assets" folder
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - 7z a -tzip -mx9 "C:\projects\build\tutorials-%APPVEYOR_BUILD_VERSION%-%COMPILER%.zip" assets
+  # finally, push the tutorials artifact
+  - cd C:\projects\build
+  - appveyor PushArtifact "tutorials-%APPVEYOR_BUILD_VERSION%-%COMPILER%.zip"
