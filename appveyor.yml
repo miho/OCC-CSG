@@ -45,6 +45,8 @@ install:
   # install OCE 0.18.3 
   - curl -LfsS -o OCE-0.18.3.zip https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
   - 7z x OCE-0.18.3.zip -o%APPVEYOR_BUILD_FOLDER%\dependencies -y > nul
+  - cd %APPVEYOR_BUILD_FOLDER%\dependencies\
+  - dir
   - cd %APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3
   - mkdir build && mkdir installation && cd build
   - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DFREETYPE_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3\installation\include\freetype2\freetype\config -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\dependencies\oce-OCE-0.18.3\installation\"
