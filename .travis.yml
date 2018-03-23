@@ -5,6 +5,7 @@ addons:
       sources:
        - george-edison55-precise-backports
       packages:
+       - make
        - cmake-data
        - cmake
        - libgl1-mesa-dri
@@ -16,11 +17,11 @@ matrix:
     include:
     - os: linux
       language: c++
-      install: make get-deps
+      install: true
     - os: osx
       language: java
       osx_image: xcode9.2
-      install: make get-deps
+      install: true
 
 script:
     - export OUR_DIR=$(pwd)
