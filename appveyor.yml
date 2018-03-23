@@ -40,7 +40,7 @@ install:
   - cd %APPVEYOR_BUILD_FOLDER%\dependencies\freetype-2.7.1\freetype-2.7.1
   - dir
   - mkdir build && mkdir installation && cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\dependencies\freetype-2.7.1\freetype-2.7.1\installation\"
+  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\dependencies\freetype-2.7.1\freetype-2.7.1\installation\
   - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
   # install OCE 0.18.3 
   - curl -LfsS -o OCE-0.18.3.zip https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
