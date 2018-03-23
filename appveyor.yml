@@ -70,8 +70,16 @@ build_script:
   - dir %APPVEYOR_BUILD_FOLDER%\oce\installation\
   - cmake .. -G "%generator%" -DOCE_DIR=%APPVEYOR_BUILD_FOLDER%\oce\installation\cmake
   - MSBuild .\occ-csg-prj.sln  /property:Configuration=Release /property:Platform=x64
+  - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\"
+  - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.11.25325\x64\Microsoft.VC141.CRT\vcruntime140.dll" bin
+  - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.11.25325\x64\Microsoft.VC141.CRT\vccorlib140.dll" bin
+  - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.11.25325\x64\Microsoft.VC141.CRT\msvcp140.dll" bin
+  - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.11.25325\x64\Microsoft.VC141.CRT\concrt140.dll" bin
+  - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.11.25325\x64\Microsoft.VC141.OpenMP\vcomp140.dll" bin
   - bin\Release\occ-csg.exe --help
-  
+
+after_build:
+  - appveyor PushArtifact "bin\Release\occ-csg.exe"
   
   # build
   #- cmake --build . --target ALL_BUILD --config %configuration% -- /nologo /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
