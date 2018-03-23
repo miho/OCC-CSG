@@ -23,9 +23,9 @@ configuration:
   #- Debug
 
 environment:
-  MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
+  MSBUILD_FLAGS: /verbosity:minimal # /maxcpucount
   matrix:
-    - generator: "Visual Studio 15"    
+    - generator: "Visual Studio 15 2017 Win64"    
 
 matrix:
   fast_finish: true
