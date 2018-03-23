@@ -32,7 +32,8 @@ cache:
   ccache: true
   directories:
    - $HOME/Library/Caches/Homebrew
-   - $HOME/oce-OCE-0.18.3
+   - /home/travis/build/miho/OCC-CSG/oce-OCE-0.18.3
+   - /Users/travis/build/miho/OCC-CSG/oce-OCE-0.18.3
 
 env:
   global:
