@@ -30,8 +30,9 @@ environment:
 matrix:
   fast_finish: true
 
-#cache:
-#  - c:\project\fifengine-cpp-tutorials\dependencies
+cache:
+  - %APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\
+  - %APPVEYOR_BUILD_FOLDER%\OCE-0.18.3\
 
 install:
   # install FreeType 2.7.1
