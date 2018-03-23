@@ -18,11 +18,15 @@ matrix:
     - os: linux
       language: c++
       install: true
-    #- os: osx
-    #  language: java
-    #  osx_image: xcode9.2
-    #  install: true
-
+    - os: osx
+      language: java
+      osx_image: xcode9.2
+      install: true
+      
+before_install:
+  #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; fi
+  
 script:
     - export OUR_DIR=$(pwd)
     - wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
