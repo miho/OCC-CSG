@@ -25,7 +25,7 @@ matrix:
       
 before_install:
   #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; brew install ccache; fi
   
 script:
     - export OUR_DIR=$(pwd)
@@ -34,8 +34,10 @@ script:
     - cd oce-OCE-0.18.3
     - mkdir build && mkdir installation && cd build
     - export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" 
-    - make -j4 && make install
+    - cmake .. -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" 
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make -j4; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j8; fi
+    - make install
     - cd $OUR_DIR
     - mkdir build && cd build
     - cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
