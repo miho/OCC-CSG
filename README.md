@@ -1,5 +1,8 @@
 # OCC-CSG
 
+[![Build Status](https://travis-ci.org/miho/OCC-CSG.svg?branch=master)](https://travis-ci.org/miho/OCC-CSG) [![Build status](https://ci.appveyor.com/api/projects/status/k4lxqsej71ughs48?svg=true)](https://ci.appveyor.com/project/miho/occ-csg)
+
+
 Simple but powerful CSG tool based on the OpenCascade CAD Kernel ([OCE](https://github.com/tpaviot/oce) edition)
 
 This tool provides a simple command-line interface for applying boolean operations and transformations to 3D objects specified in either BREP/STEP or STL format. It contains a convenient STL importer for converting mesh based geometries to an eqivalent BREP representation (might cause performance issues for large STL files). Geometries can be exported as STL files as well.
@@ -119,7 +122,7 @@ On macOS use these additional settings:
     
 #### Windows (CMD)
 
-	"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\vsdevcmd" -arch=x64
+    "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\vsdevcmd" -arch=x64
     cd \path\to\project
     mkdir build
     cd build
