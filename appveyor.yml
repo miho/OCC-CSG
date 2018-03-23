@@ -40,7 +40,9 @@ install:
   - cmd.exe '/C 7z x "freetype-2.7.1.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1 -y > nul
   - cd %APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1
   - dir
-  - mkdir build && mkdir installation && cd build
+  - if not exist build mkdir build
+  - if not exist installation mkdir installation
+  - cd build
   - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\
   - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
   
@@ -48,14 +50,16 @@ install:
   #- curl -LfsS -o OCE-0.18.3.tar.gz https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
   #- cmd.exe '/C 7z x "OCE-0.18.3.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\OCE-0.18.3 -y > nul
   - cd %APPVEYOR_BUILD_FOLDER%\
-  - git clone --branch OCE-0.18.3 --depth 1 https://github.com/tpaviot/oce.git oce
+  - if not exist oce git clone --branch OCE-0.18.3 --depth 1 https://github.com/tpaviot/oce.git oce
   #- git clone https://github.com/tpaviot/oce.git oce
   #- cd %APPVEYOR_BUILD_FOLDER%\
   - dir
   - cd %APPVEYOR_BUILD_FOLDER%\oce
   #- git checkout OCE-0.18.3
   - dir
-  - mkdir build && mkdir installation && cd build
+  - if not exist build mkdir build
+  - if not exist installation mkdir installation
+  - cd build
   - cmake .. -G "Visual Studio 15 2017 Win64" -DOCE_BUILD_SHARED_LIB=OFF -DCMAKE_BUILD_TYPE=Release -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DFREETYPE_INCLUDE_DIR_freetype2=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\include\freetype2\freetype\config -DFREETYPE_INCLUDE_DIR_ft2build=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\include\freetype2 -DFREETYPE_LIBRARY_RELEASE=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\lib\freetype.lib -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\oce\installation\"
   - MSBuild .\OCE.sln  /property:Configuration=Release /property:Platform=x64
   - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
@@ -64,7 +68,7 @@ build_script:
   #- dir
   ## create folder for an out-of-source-tree build: "c:\projects\build"
   #- cd.. 
-  - mkdir build
+  - if not exist build mkdir build
   - cd build
   # generate build script
   - dir %APPVEYOR_BUILD_FOLDER%\oce\installation\
@@ -76,7 +80,7 @@ build_script:
   #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\msvcp140.dll" bin
   #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\concrt140.dll" bin
   #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.OpenMP\vcomp140.dll" bin
-  #- bin\Release\occ-csg.exe --help
+  - bin\Release\occ-csg.exe --help
 
 after_build:
   - appveyor PushArtifact "bin\Release\occ-csg.exe"
