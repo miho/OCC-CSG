@@ -1,0 +1,49 @@
+sudo: false
+
+addons:
+    apt:
+      sources:
+       - george-edison55-precise-backports
+      packages:
+       - cmake-data
+       - cmake
+       - libgl1-mesa-dri
+       - libglu1-mesa-dev
+       - libgl1-mesa-dev
+       - libfreetype6-dev
+
+matrix:
+    include:
+    - os: linux
+      language: c++
+      install: make get-deps
+    - os: osx
+      language: java
+      osx_image: xcode9.2
+      install: make get-deps
+
+script:
+    - export OUR_DIR=$(pwd)
+    - wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
+    - tar xvzf OCE-0.18.3.tar.gz
+    - cd oce-OCE-0.18.3
+    - mkdir build && mkdir installation && cd build
+    - export OCE_INSTALL_DIR=$(pwd)/../installation
+    - cmake .. \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DOCE_USE_TCL_TEST_FRAMEWORK=OFF \
+      -DOCE_TESTING=OFF \
+      -DOCE_DRAW=OFF \
+      -DOCE_VISUALISATION=ON \
+      -DOCE_OCAF=ON \
+      -DOCE_DATAEXCHANGE=ON \
+      -DOCE_COPY_HEADERS_BUILD=ON \
+      -DOCE_MULTITHREAD_LIBRARY=OPENMP \
+      -DOCE_INSTALL_PREFIX=$(pwd)/../installation
+    - make -j8 && make install
+    - cd $OUR_DIR
+    - mkdir build && cd build
+    - cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
+    - make && bin/occ-csg --help
+      
+    
