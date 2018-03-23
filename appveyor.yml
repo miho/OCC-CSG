@@ -69,6 +69,7 @@ build_script:
   # generate build script
   - dir %APPVEYOR_BUILD_FOLDER%\oce\installation\
   - cmake .. -G "%generator%" -DOCE_DIR=%APPVEYOR_BUILD_FOLDER%\oce\installation\cmake
+  - MSBuild .\occ-csg-prj.sln  /property:Configuration=Release /property:Platform=x64
   - bin\Release\occ-csg.exe --help
   
   
