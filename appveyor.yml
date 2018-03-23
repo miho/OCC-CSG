@@ -30,9 +30,9 @@ environment:
 matrix:
   fast_finish: true
 
-#cache:
-#  - %APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\
-#  - %APPVEYOR_BUILD_FOLDER%\OCE-0.18.3\
+cache:
+  - C:\projects\occ-csg\freetype-2.7.1\
+  - C:\projects\occ-csg\OCE-0.18.3\
 
 install:
   # install FreeType 2.7.1
