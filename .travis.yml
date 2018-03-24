@@ -48,7 +48,7 @@ script:
     - mkdir -p build && mkdir -p installation && cd build
     - export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/
     - cmake .. -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" 
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout 1800 make -j4 || true ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then (timeout 60 make -j4 || true) ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j8; fi
     - make install
     - cd $OUR_DIR
