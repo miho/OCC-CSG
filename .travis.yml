@@ -39,7 +39,7 @@ env:
   global:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=/usr/lib/ccache:${PATH}; fi
   
-script:
+script: 
     - export OUR_DIR=$(pwd)
     - echo "home directory $OUT_DIR"
     - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
