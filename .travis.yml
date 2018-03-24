@@ -37,9 +37,10 @@ env:
     
 before_install:
   #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; brew install ccache; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; brew install ccache; brew install coreutils; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
-
+  # adding timeout command to path for os x
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH="$PATH:/usr/local/opt/coreutils/libexec/gnubin"; fi
   
 script: 
     - export OUR_DIR=$(pwd)
