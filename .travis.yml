@@ -46,7 +46,7 @@ script:
     - export OUR_DIR=$(pwd)
     - echo "home directory $OUR_DIR"
     
-    # building static freetype on OS X
+    # downloading and building static freetype
     - wget https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
     - tar xzf freetype-2.7.1.tar.gz
     - cd freetype-2.7.1; mkdir -p build; cd build;
@@ -64,10 +64,15 @@ script:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export OCE_INSTALL_DIR=$(pwd)/../installation/OCE.framework/Versions/0.18/Resources; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/; fi
     
-    # configuring OCE cmake
+    # configuring OCE via cmake
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" -DFREETYPE_INCLUDE_DIR_freetype2=$OUR_DIR/freetype-2.7.1/installation/include/freetype2/freetype/config -DFREETYPE_INCLUDE_DIR_ft2build=$OUR_DIR/freetype-2.7.1/installation/include/freetype2 -DFREETYPE_LIBRARY_RELEASE=$OUR_DIR/freetype-2.7.1/installation/lib/libfreetype.a 
     
     # now we build OCE
+    # -> On macOS we use a timeout to prevent travis from terminating our build job
+    #    without saving the ccache and OCE directories. We rerun the job until OCE
+    #    is fully built. The output will indicate that by showing 
+    #       ">> skipping build until cache works"
+    #    TODO: is there a workaround for build jobs that take longer than 50 minutes?
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD (make -j4 && make install > install_out.txt ; tail -n 50 install_out.txt ) || export BUILD_SUCCESS=false ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then (make -j8 && make install > install_out.txt ; tail -n 50 install_out.txt) || export BUILD_SUCCESS=false; fi
     
@@ -75,6 +80,6 @@ script:
     - cd $OUR_DIR
     - mkdir -p build && cd build
     - (! $BUILD_SUCCESS && echo ">> skipping build until cache works") || cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
-    - (! $BUILD_SUCCESS && echo ">> skipping build until cache works") || (make && bin/occ-csg --help)         
+    - (! $BUILD_SUCCESS && echo ">> skipping build until cache works") || make && bin/occ-csg --help       
       
     
