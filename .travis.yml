@@ -19,7 +19,7 @@ matrix:
       language: c++
       install: true
     - os: osx
-      language: java
+      language: c++
       osx_image: xcode9.2
       install: true
 
