@@ -33,7 +33,7 @@ cache:
 env:
   global:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=/usr/lib/ccache:${PATH}; fi
-    - TIMEOUT_BUILD='1m'
+    - TIMEOUT_BUILD='30m'
     
 before_install:
   #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
