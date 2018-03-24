@@ -10,7 +10,7 @@ addons:
        - cmake
        - libglu1-mesa-dev
        - libgl1-mesa-dev
-       - libfreetype6-dev
+       #- libfreetype6-dev
 
 matrix:
     include:
@@ -52,7 +52,7 @@ script:
     - cd freetype-2.7.1; mkdir -p build; cd build;
     - cmake .. -DWITH_ZLIB=OFF -DWITH_HarfBuzz=OFF -DWITH_PNG=OFF -DWITH_BZip2=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../installation;
     - make -j2 && make install
-    - cd ..
+    - cd ../../
     
     # downloading OCE
     - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
