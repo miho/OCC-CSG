@@ -28,7 +28,7 @@ cache:
   directories:
    - $HOME/Library/Caches/Homebrew
    #- /home/travis/build/miho/OCC-CSG/oce-OCE-0.18.3
-   - /Users/travis/build/miho/OCC-CSG/oce-OCE-0.18.3
+   - /Users/travis/build/miho/OCC-CSG/oce-OCE-0.18.3 
 
 env:
   global:
