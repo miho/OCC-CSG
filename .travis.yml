@@ -37,7 +37,7 @@ env:
     
 before_install:
   # installing ccache and freetype packages via homebrew
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; brew install ccache; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
   # adding timeout command to path for os x
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH="$PATH:/usr/local/opt/coreutils/libexec/gnubin"; fi
@@ -45,6 +45,12 @@ before_install:
 script: 
     - export OUR_DIR=$(pwd)
     - echo "home directory $OUR_DIR"
+    
+    # building static freetype
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tar xzf freetype-2.7.1.tar.gz; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cd freetype-2.7.1; mkdir -p build; cd build; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cmake .. -DWITH_ZLIB=OFF -DWITH_HarfBuzz=OFF -DWITH_LIBPNG=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../installation; fi
     
     # building OCE
     - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
@@ -57,7 +63,7 @@ script:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/; fi
     
     # configuring occ-csg cmake
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" 
+    - cmake .. -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" -DFREETYPE_INCLUDE_DIR_freetype2=$OUR_DIR/freetype-2.7.1/installation/include/freetype2/freetype/config -DFREETYPE_INCLUDE_DIR_ft2build=$OUR_DIR/freetype-2.7.1/installation/include/freetype2 -DFREETYPE_LIBRARY_RELEASE=$OUR_DIR/freetype-2.7.1/installation/lib/freetype.a 
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD make -j4 install || export BUILD_SUCCESS=false ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j8 install || export BUILD_SUCCESS=false; fi
     
