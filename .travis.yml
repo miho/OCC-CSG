@@ -33,7 +33,7 @@ cache:
 env:
   global:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=/usr/lib/ccache:${PATH}; fi
-    - TIMEOUT_BUILD="1m"
+    - TIMEOUT_BUILD='1m'
     
 before_install:
   #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
@@ -50,7 +50,7 @@ script:
     - mkdir -p build && mkdir -p installation && cd build
     - export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/
     - cmake .. -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" 
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD (make -j4 && make install) || true ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD $(make -j4 install) || true ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j8; fi
         
     - cd $OUR_DIR
