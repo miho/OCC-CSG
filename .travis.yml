@@ -8,7 +8,6 @@ addons:
        - make
        - cmake-data
        - cmake
-       - libgl1-mesa-dri
        - libglu1-mesa-dev
        - libgl1-mesa-dev
        - libfreetype6-dev
@@ -37,7 +36,7 @@ env:
     - BUILD_SUCCESS=true
     
 before_install:
-  #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  # installing ccache and freetype packages via homebrew
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype; brew install ccache; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
   # adding timeout command to path for os x
@@ -46,6 +45,8 @@ before_install:
 script: 
     - export OUR_DIR=$(pwd)
     - echo "home directory $OUR_DIR"
+    
+    # building OCE
     - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
     - if [ ! -f oce-OCE-0.18.3 ]; then tar xzf OCE-0.18.3.tar.gz; fi
     - cd oce-OCE-0.18.3
@@ -54,7 +55,8 @@ script:
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" 
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD make -j4 install || export BUILD_SUCCESS=false ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j8 install || export BUILD_SUCCESS=false; fi
-        
+    
+    # finally build and test occ-csg
     - cd $OUR_DIR
     - mkdir -p build && cd build
     - (! $BUILD_SUCCESS && echo ">> skipping build until cache works") || cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
