@@ -64,9 +64,10 @@ script:
         timeout $TIMEOUT make install
         # Convert the timeout exit code to 0.
         RESULT=$?; if [ $RESULT -eq 0 ] || [ $RESULT -eq 142 ]; then true; else false; fi;
+        
     - cd $OUR_DIR
     - mkdir -p build && cd build
-    - cmake .. -DOCE_DIR=$OCE_INSTALL_DIR || true
+    #- cmake .. -DOCE_DIR=$OCE_INSTALL_DIR || true
     #- make && bin/occ-csg --help          
       
     
