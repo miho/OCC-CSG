@@ -71,7 +71,7 @@ script:
     # -> On macOS we use a timeout to prevent travis from terminating our build job
     #    without saving the ccache and OCE directories. We rerun the job until OCE
     #    is fully built. The output will indicate that by showing 
-    #       ">> skipping build until cache works"
+    #       ">> skipping build until ccache and compilation of oce works. restart task or schedule new task."
     #    TODO: is there a workaround for build jobs that take longer than 50 minutes?
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD make -j4 install > install_out.txt || export BUILD_SUCCESS=false ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j8 install > install_out.txt || export BUILD_SUCCESS=false; fi
@@ -82,7 +82,7 @@ script:
     # finally build and test occ-csg
     - cd $OUR_DIR
     - mkdir -p build && cd build
-    - (! $BUILD_SUCCESS && echo ">> skipping build until cache works") || cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
-    - (! $BUILD_SUCCESS && echo ">> skipping build until cache works") || make && bin/occ-csg --help       
+    - (! $BUILD_SUCCESS && echo ">> skipping build until ccache and compilation of oce works. restart task or schedule new task.") || cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
+    - (! $BUILD_SUCCESS && echo ">> skipping build until ccache and compilation of oce works. restart task or schedule new task.") || make && bin/occ-csg --help       
       
     
