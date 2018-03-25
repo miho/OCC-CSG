@@ -20,7 +20,6 @@ platform:
 
 configuration:
   - Release
-  #- Debug
 
 environment:
   MSBUILD_FLAGS: /verbosity:minimal /maxcpucount
@@ -74,12 +73,6 @@ build_script:
   - dir %APPVEYOR_BUILD_FOLDER%\oce\installation\
   - cmake .. -G "%generator%" -DOCE_DIR=%APPVEYOR_BUILD_FOLDER%\oce\installation\cmake
   - MSBuild .\occ-csg-prj.sln  /property:Configuration=Release /property:Platform=x64
-  #- dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\"
-  #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\vcruntime140.dll" bin
-  #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\vccorlib140.dll" bin
-  #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\msvcp140.dll" bin
-  #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\concrt140.dll" bin
-  #- cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.OpenMP\vcomp140.dll" bin
   - bin\Release\occ-csg.exe --help
 
 after_build:
@@ -97,6 +90,7 @@ after_build:
   
   # copy README and LICENSE files to release folder
   - cp %APPVEYOR_BUILD_FOLDER%\LICENSE %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64
+  - cp %APPVEYOR_BUILD_FOLDER%\THIRDPARTY-LICENSES %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64
   - cp %APPVEYOR_BUILD_FOLDER%\README.md %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64
   - cp %APPVEYOR_BUILD_FOLDER%\build\bin\Release\occ-csg.exe %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\bin
   
