@@ -87,10 +87,11 @@ script:
 
 before_deploy:
     - cd $OUR_DIR
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p $OUR_DIR/release/occ-csg-$TRAVIS_TAG-macos/bin; cp $OUR_DIR/build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-macos/bin; cp $OUR_DIR/README.md $OUR_DIR/release/occ-csg-$TRAVIS_TAG-macos/; cp $OUR_DIR/LICENSE $OUR_DIR/release/occ-csg-$TRAVIS_TAG-macos/ ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then zip -r $OUR_DIR/release/occ-csg-$TRAVIS_TAG-macos.zip $OUR_DIR/release/occ-csg-$TRAVIS_TAG-macos/; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p $OUR_DIR/release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp build/bin/occ-csg $OUR_DIR/release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp $OUR_DIR/README.md release/occ-csg-$TRAVIS_TAG-linux-x64/; cp $OUR_DIR/LICENSE $OUR_DIR/release/occ-csg-$TRAVIS_TAG-linux-x64/ ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then zip -r $OUR_DIR/release/occ-csg-$TRAVIS_TAG-linux-x64.zip $OUR_DIR/release/occ-csg-$TRAVIS_TAG-linux-x64/; fi   
+    - mkdir release && cd release
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p occ-csg-$TRAVIS_TAG-macos/bin; cp $OUR_DIR/build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-macos/bin; cp $OUR_DIR/README.md occ-csg-$TRAVIS_TAG-macos/; cp $OUR_DIR/LICENSE occ-csg-$TRAVIS_TAG-macos/ ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then zip -r occ-csg-$TRAVIS_TAG-macos.zip occ-csg-$TRAVIS_TAG-macos/; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p occ-csg-$TRAVIS_TAG-linux-x64/bin; cp $OUR_DIR/build/bin/occ-csg occ-csg-$TRAVIS_TAG-linux-x64/bin; cp $OUR_DIR/README.md release/occ-csg-$TRAVIS_TAG-linux-x64/; cp $OUR_DIR/LICENSE occ-csg-$TRAVIS_TAG-linux-x64/ ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then zip -r occ-csg-$TRAVIS_TAG-linux-x64.zip occ-csg-$TRAVIS_TAG-linux-x64/; fi   
 
 deploy:
     - provider: releases
