@@ -100,7 +100,7 @@ after_build:
   - cp %APPVEYOR_BUILD_FOLDER%\README.md %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64
   
   # package the release
-  - 7z a - tzip %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64.zip %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\
+  - 7z a -tzip %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64.zip %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\
   
   # push final release archive as artifact
   - appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64.zip
