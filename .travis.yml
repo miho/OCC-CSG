@@ -100,7 +100,7 @@ deploy:
       
       skip_cleanup: true
     
-      file: occ-csg-$TRAVIS_TAG-linux-x64.zip
+      file: releases/occ-csg-$TRAVIS_TAG-linux-x64.zip
     
       on:
         condition: $TRAVIS_OS_NAME = linux
@@ -114,7 +114,7 @@ deploy:
       
       skip_cleanup: true
     
-      file: occ-csg-$TRAVIS_TAG-macos.zip
+      file: releases/occ-csg-$TRAVIS_TAG-macos.zip
     
       on:
         condition: $TRAVIS_OS_NAME = osx
