@@ -87,10 +87,10 @@ script:
 
 before_deploy:
     - cd $OUR_DIR
-    - if [[ ("$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p release/occ-csg-$TRAVIS_TAG-macos/bin; cp build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-macos/bin; cp README release/occ-csg-$TRAVIS_TAG-macos/; cp LICENSE release/occ-csg-$TRAVIS_TAG-macos/ ; fi
-    - if [[ ("$TRAVIS_OS_NAME" == "osx" ]]; then zip -r release/occ-csg-$TRAVIS_TAG-macos.zip release/occ-csg-$TRAVIS_TAG-macos/; fi
-    - if [[ ("$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp README release/occ-csg-$TRAVIS_TAG-linux-x64/; cp LICENSE release/occ-csg-$TRAVIS_TAG-linux-x64/ ; fi
-    - if [[ ("$TRAVIS_OS_NAME" == "linux" ]]; then zip -r release/occ-csg-$TRAVIS_TAG-linux-x64.zip release/occ-csg-$TRAVIS_TAG-linux-x64/; fi   
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p release/occ-csg-$TRAVIS_TAG-macos/bin; cp build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-macos/bin; cp README release/occ-csg-$TRAVIS_TAG-macos/; cp LICENSE release/occ-csg-$TRAVIS_TAG-macos/ ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then zip -r release/occ-csg-$TRAVIS_TAG-macos.zip release/occ-csg-$TRAVIS_TAG-macos/; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp README release/occ-csg-$TRAVIS_TAG-linux-x64/; cp LICENSE release/occ-csg-$TRAVIS_TAG-linux-x64/ ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then zip -r release/occ-csg-$TRAVIS_TAG-linux-x64.zip release/occ-csg-$TRAVIS_TAG-linux-x64/; fi   
 
 deploy:
     - provider: releases
