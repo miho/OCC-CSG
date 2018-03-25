@@ -84,5 +84,39 @@ script:
     - mkdir -p build && cd build
     - (! $BUILD_SUCCESS && echo ">> skipping build until ccache and compilation of oce works. restart task or schedule new task.") || cmake .. -DOCE_DIR=$OCE_INSTALL_DIR
     - (! $BUILD_SUCCESS && echo ">> skipping build until ccache and compilation of oce works. restart task or schedule new task.") || make && bin/occ-csg --help       
-      
+
+before_deploy:
+    - cd $OUR_DIR
+    - if [[ ("$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p release/occ-csg-$TRAVIS_TAG-macos/bin; cp build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-macos/bin; cp README release/occ-csg-$TRAVIS_TAG-macos/; cp LICENSE release/occ-csg-$TRAVIS_TAG-macos/ ; fi
+    - if [[ ("$TRAVIS_OS_NAME" == "osx" ]]; then zip -r release/occ-csg-$TRAVIS_TAG-macos.zip release/occ-csg-$TRAVIS_TAG-macos/; fi
+    - if [[ ("$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp build/bin/occ-csg release/occ-csg-$TRAVIS_TAG-linux-x64/bin; cp README release/occ-csg-$TRAVIS_TAG-linux-x64/; cp LICENSE release/occ-csg-$TRAVIS_TAG-linux-x64/ ; fi
+    - if [[ ("$TRAVIS_OS_NAME" == "linux" ]]; then zip -r release/occ-csg-$TRAVIS_TAG-linux-x64.zip release/occ-csg-$TRAVIS_TAG-linux-x64/; fi   
+
+deploy:
+    - provider: releases
     
+      api_key:
+        secure: zjSgPQIowqYPUILskt3+Bn1+wfvJsIQz4INZbusPRMCJvLchQzIxvejURPqb7f067cDbHXFoUjGydgHz6WdIFhp31scML5816enBTQeVOgKwc3cLlV2FY9i/ymxckF7fnJ0DTyz6f99bGx8oQSglNfiyOt8JO6pYzB7ZpEQaGByqyYiBsXGjAEauezbux1jNPo5B8yt4cwfy/uH9RvCpNMXgbJSFqm87nfrovAbzVda6hjLPWeY7AmP3aO9Vv0YL7nYXrbyYLYkyO/lKz87jVCvxWW03rDo+5oAfCcZJAQ/4+Mhek6YeiqWC+kg7V35xRlbt6l5VJnB1UFQTnNXbvPps7EM0c0/0O4mBcMegIojdvApNV4U960ssa4e2jekhP6TsLBuPgwasoh7lYFWcX5IqtEbtJAKTBIO7ghPnSbLQmcrx57cTghFX8lJJVJsYSWOzKs5FZv3XdtKqK6fwqR3icjwTkuVuiTCn1/uXu8KCnTyyMhXKaLMZw0a5dP9MH4ZRNmFD8X5i9ZdLdV0e9T05GHSj7vNy9+dNi6AGX0j18LSrlnw9FDCkRk2YtWA5T/oSoJ8WEYa/i/2S30propGJt2xtN+2qW8QBq23zquNleh1VZwy31imXPlTx3r5ZQWNKE3hBWLnmoY87qkaIk0jZqX6bWw+KUleNT7lfIfk=
+      
+      skip_cleanup: true
+    
+      file: occ-csg-$TRAVIS_TAG-linux-x64.zip
+    
+      on:
+        condition: $TRAVIS_OS_NAME = linux
+        tags: true
+        #repo: miho/OCC-CSG
+        
+    - provider: releases
+    
+      api_key:
+        secure: zjSgPQIowqYPUILskt3+Bn1+wfvJsIQz4INZbusPRMCJvLchQzIxvejURPqb7f067cDbHXFoUjGydgHz6WdIFhp31scML5816enBTQeVOgKwc3cLlV2FY9i/ymxckF7fnJ0DTyz6f99bGx8oQSglNfiyOt8JO6pYzB7ZpEQaGByqyYiBsXGjAEauezbux1jNPo5B8yt4cwfy/uH9RvCpNMXgbJSFqm87nfrovAbzVda6hjLPWeY7AmP3aO9Vv0YL7nYXrbyYLYkyO/lKz87jVCvxWW03rDo+5oAfCcZJAQ/4+Mhek6YeiqWC+kg7V35xRlbt6l5VJnB1UFQTnNXbvPps7EM0c0/0O4mBcMegIojdvApNV4U960ssa4e2jekhP6TsLBuPgwasoh7lYFWcX5IqtEbtJAKTBIO7ghPnSbLQmcrx57cTghFX8lJJVJsYSWOzKs5FZv3XdtKqK6fwqR3icjwTkuVuiTCn1/uXu8KCnTyyMhXKaLMZw0a5dP9MH4ZRNmFD8X5i9ZdLdV0e9T05GHSj7vNy9+dNi6AGX0j18LSrlnw9FDCkRk2YtWA5T/oSoJ8WEYa/i/2S30propGJt2xtN+2qW8QBq23zquNleh1VZwy31imXPlTx3r5ZQWNKE3hBWLnmoY87qkaIk0jZqX6bWw+KUleNT7lfIfk=
+      
+      skip_cleanup: true
+    
+      file: occ-csg-$TRAVIS_TAG-macos.zip
+    
+      on:
+        condition: $TRAVIS_OS_NAME = osx
+        tags: true
+        #repo: miho/OCC-CSG      
