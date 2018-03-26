@@ -111,7 +111,7 @@ On macOS use these additional settings:
 
 - FreeType: if freetype cannot be found on Ubuntu then install libfreetype6-dev, we use freetype-2.7 on Windows and macOS, to build static freetype on macOS, make sure to build without zlib, libpng, bzip2 and harfbuzz (otherwise it will have dynamic dependencies to these libraries)
 - OpenGL:   if GL/GLU cannot be found on Unbuntu then install libglu1-mesa-dev and libgl1-mesa-dev
-- XQuartz:  only necessary on macOS (if it is necessary depends on the version of macOS and OCE, see OCE documentation), it might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
+- XQuartz:  only necessary on macOS. Whether XQuartz is necessary depends on the version of macOS and OCE, see OCE documentation. It might be necessary to adjust the X11 include path via `ln -s /opt/X11/include/X11 /usr/local/include/X11`
 
 #### Bash (Linux/macOS/Cygwin/other Unix-like Shell)
 
