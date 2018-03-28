@@ -84,6 +84,8 @@
 
 #include <gp_Circ.hxx>
 
+#include <TopExp_Explorer.hxx>
+
 // fonts & text
 #include <Font_BRepFont.hxx>
 
@@ -101,7 +103,7 @@
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
 // version
-#define VERSION 0.6
+#define VERSION 0.7
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -116,6 +118,7 @@ TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, do
 TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
+std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 
 // minimal transform API
 TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]);
@@ -130,6 +133,7 @@ void transform(int argc, char *argv[]);
 void convert(int argc, char *argv[]);
 void csg(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
+void splitShape(int argc, char *argv[]);
 
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
@@ -186,6 +190,7 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--convert")==0) convert(argc,argv);
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
 	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
+	else if(strcmp(argv[1], "--split-shape")==0) splitShape(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error();
 
@@ -312,10 +317,10 @@ bool save(std::string const &filename, TopoDS_Shape shape, double stlTOL) {
 
 	if(endsWith(toLower(filename), ".stl")) {
 		std::cout << " -> STL TOL: " << stlTOL << std::endl;
-		StlAPI_Writer myStlWriter;
-		BRepMesh_IncrementalMesh twoMesh( shape, stlTOL);
-    	twoMesh.Perform();
-		myStlWriter.Write(shape, filename.c_str());
+		StlAPI_Writer stlWriter;
+		BRepMesh_IncrementalMesh mesh( shape, stlTOL);
+    	mesh.Perform();
+		stlWriter.Write(shape, filename.c_str());
 	} else if(endsWith(toLower(filename), ".stp") || endsWith(toLower(filename), ".step")) {
 		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
 		STEPControl_Writer writer;
@@ -846,6 +851,69 @@ void transform(int argc, char *argv[]) {
 	save(argv[5], shape, stlTOL);
 }
 
+void splitShape(int argc, char *argv[]) {
+
+	if(argc != 4 && argc != 5) {
+		error();
+	}
+
+	std::string fileName = argv[2];
+
+	std::string outputFormat = toLower(argv[3]);
+
+	if(!endsWith(outputFormat, "stl")
+	 && !endsWith(outputFormat, "stp")
+	 && !endsWith(outputFormat, "brep")) {
+		unsupportedFormat(outputFormat);
+	}
+
+	double stlTOL;
+
+	if(argc == 5) {
+		stlTOL = parseDouble(argv[4]);
+	} else {
+		stlTOL = 0.5;
+	}
+
+	TopoDS_Shape shape = load(fileName);
+
+	bool outputIsTriangulated = endsWith(outputFormat, "stl");
+
+    // triangulate if output format is stl
+	if(outputIsTriangulated) {
+		BRepMesh_IncrementalMesh mesh( shape, stlTOL);
+    	mesh.Perform();
+	}
+
+	// remove file ending
+	size_t lastindex = fileName.find_last_of("."); 
+	std::string fNameWithoutEnding = fileName.substr(0, lastindex); 
+
+	std::vector<TopoDS_Shape> faces = splitShape(shape);
+
+	StlAPI_Writer stlWriter;
+
+	for(size_t i = 0; i < faces.size(); i++) {
+
+		// build leading-zeros-string
+		unsigned int numDigits = (unsigned int)(log10(faces.size())+1);
+		std::string faceId = std::to_string(i);
+		std::string faceName = std::string(numDigits - faceId.length(), '0') + faceId;
+
+		// final face filename
+		std::string faceFileName = fNameWithoutEnding + "-face-" +faceName + "." + outputFormat;
+
+        // save face
+		if(outputIsTriangulated) {
+			// if stl we reuse triangulation
+			stlWriter.Write(faces[i], faceFileName.c_str());
+		} else {
+			// non-triangulated files otherwise
+			save(faceFileName, faces[i], stlTOL);
+		}
+	}
+}
+
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2) {
 	gp_Pnt lowerLeftCornerOfBox(x1,y1,z1);
 	gp_Pnt upperRightCornerOfBox(x2,y2,z2);
@@ -1041,7 +1109,7 @@ TopoDS_Shape createText2d(std::string const &font, double fSize, double x, doubl
     //TopoDS_Shape textShape = textBuilder.Perform(font, NCollection_String(text));
 }
 
-TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]) {
+TopoDS_Shape transform(TopoDS_Shape const &shape, double transform_matrix[12]) {
 
 	gp_GTrsf tMat;
 
@@ -1057,6 +1125,17 @@ TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]) {
 	transform.Perform(shape, true);
 
 	return transform.ModifiedShape(shape);
+}
+
+std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape) {
+	std::vector<TopoDS_Shape> result;
+	for (TopExp_Explorer fExpl(shape, TopAbs_FACE); fExpl.More(); fExpl.Next())
+	{
+		const TopoDS_Shape &curFace = fExpl.Current();
+
+		result.push_back(curFace);
+	}
+	return result;
 }
 
 bool isAccessible(std::string const &filename) {
@@ -1201,7 +1280,8 @@ void usage() {
 	std::cerr << std::endl;
 	std::cerr << " occ-csg --create box x1,y1,z1,x2,y2,z2                            box.stp" << std::endl;
 	std::cerr << " occ-csg --create sphere x1,y1,z1,r                                sphere.stp" << std::endl;
-	std::cerr << " occ-csg --create cyl x1,y1,z1,r1,h                                cyl.stp" << std::endl;
+	std::cerr << " occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp" << std::endl;
+	std::cerr << " occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
@@ -1225,6 +1305,10 @@ void usage() {
 	std::cerr << " occ-csg --csg union file1.stp file2.stp file-out.stp" << std::endl;
 	std::cerr << " occ-csg --csg difference file1.stp file2.stp file-out.stp" << std::endl;
 	std::cerr << " occ-csg --csg intersection file1.stp file2.stp file-out.stp" << std::endl;
+	std::cerr << std::endl;
+	std::cerr << "Shape Editing:" << std::endl;
+	std::cerr << std::endl;
+    std::cerr << " occ-csg --split-shape shape.stp stp" << std::endl;
 	std::cerr << std::endl;
 	std::cerr << "Bounds:" << std::endl;
 	std::cerr << std::endl;
