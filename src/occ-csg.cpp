@@ -128,13 +128,14 @@ std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 void roundEdges(int argc, char* argv[]);
 void splitShape(int argc, char *argv[]);
 
+void error(std::string const & msg);
+
 // minimal transform API
 TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]);
 
 // CLI functions
 void version();
 void usage();
-void error();
 void notImplemented();
 void create(int argc, char *argv[]);
 void transform(int argc, char *argv[]);
@@ -172,9 +173,13 @@ enum NUMBER_CONVERSION_ERROR {
 // Java-style number conversion (with error checks)
 // (atof,ato,... are very buggy and mostly useless, remember to use strto*)
 double parseDouble(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR);
-double parseDouble(std::string const &str);
+double parseDouble(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR) > onError);
+double parseDouble(std::string const &str, std::string const & varName);
+//double parseDouble(std::string const &str);
 int parseInt(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR);
-int parseInt(std::string const &str);
+int parseInt(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR) > onError);
+int parseInt(std::string const &str, std::string const & varName);
+//int parseInt(std::string const &str);
 
 // the CLI appliction
 int main(int argc, char *argv[])
@@ -183,14 +188,14 @@ int main(int argc, char *argv[])
 	if(argc > 1 && strcmp(argv[1], "--version")==0) { version(); exit(0); }
 	
 	std::cout << "------------------------------------------------------------" << std::endl;
-    std::cout << "------        CSG based on the OCE CAD Kernel         ------" << std::endl;
+    std::cout << "------      CSG Tool based on the OCE CAD Kernel      ------" << std::endl;
 	std::cout << "------                  Version " << VERSION << "                   ------" << std::endl;
 	std::cout << "------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------" << std::endl;
 	std::cout << "------                www.mihosoft.eu                 ------" << std::endl;
 	std::cout << "------------------------------------------------------------" << std::endl;
 
 	if(argc < 2) {
-		error();
+		error("wrong number of arguments!.");
 	}
 
 	if(strcmp(argv[1], "--create")==0) create(argc,argv);
@@ -200,7 +205,7 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
 	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
-	else error();
+	else error("unknown command '" + std::string(argv[1]) + "'!");
 
 	return 0;
 }
@@ -350,21 +355,21 @@ void create(int argc, char *argv[]) {
 
 	if(strcmp(argv[2],"box")==0) {
 		if(argc != 5 && argc !=6) {
-			error();
+			error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=6) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double x1 = parseDouble(values[0].c_str());
-		double y1 = parseDouble(values[1].c_str());
-		double z1 = parseDouble(values[2].c_str());
-		double x2 = parseDouble(values[3].c_str());
-		double y2 = parseDouble(values[4].c_str());
-		double z2 = parseDouble(values[5].c_str());
+		double x1 = parseDouble(values[0].c_str(), "x1");
+		double y1 = parseDouble(values[1].c_str(), "y1");
+		double z1 = parseDouble(values[2].c_str(), "z1");
+		double x2 = parseDouble(values[3].c_str(), "x2");
+		double y2 = parseDouble(values[4].c_str(), "y2");
+		double z2 = parseDouble(values[5].c_str(), "z2");
 
 		TopoDS_Shape shape = createBox(x1,y1,z1,x2,y2,z2);
 
@@ -375,25 +380,25 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
 	} else if(strcmp(argv[2],"sphere")==0) {
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=4) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double x1 = parseDouble(values[0].c_str());
-		double y1 = parseDouble(values[1].c_str());
-		double z1 = parseDouble(values[2].c_str());
-		double r  = parseDouble(values[3].c_str());
+		double x1 = parseDouble(values[0].c_str(), "x1");
+		double y1 = parseDouble(values[1].c_str(), "y1");
+		double z1 = parseDouble(values[2].c_str(), "z1");
+		double r  = parseDouble(values[3].c_str(), "r");
 
 		TopoDS_Shape shape = createSphere(x1,y1,z1,r);
 
@@ -404,26 +409,26 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
 	} else if(strcmp(argv[2],"cyl")==0) {
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=5) {
-			error();
+            error("wrong number of arguments!");
 		}
 
-		double x1 = parseDouble(values[0].c_str());
-		double y1 = parseDouble(values[1].c_str());
-		double z1 = parseDouble(values[2].c_str());
-		double r  = parseDouble(values[3].c_str());
-		double h  = parseDouble(values[4].c_str());
+		double x1 = parseDouble(values[0].c_str(), "x1");
+		double y1 = parseDouble(values[1].c_str(), "y1");
+		double z1 = parseDouble(values[2].c_str(), "z1");
+		double r  = parseDouble(values[3].c_str(), "r");
+		double h  = parseDouble(values[4].c_str(), "h");
 
 		TopoDS_Shape shape = createCylinder(r,h);
 
@@ -438,27 +443,27 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
 	} else if(strcmp(argv[2],"cone")==0) {
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=6) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double x1 = parseDouble(values[0].c_str());
-		double y1 = parseDouble(values[1].c_str());
-		double z1 = parseDouble(values[2].c_str());
-		double r1  = parseDouble(values[3].c_str());
-		double r2  = parseDouble(values[4].c_str());
-		double h  = parseDouble(values[5].c_str());
+		double x1 = parseDouble(values[0].c_str(), "x1");
+		double y1 = parseDouble(values[1].c_str(), "y1");
+		double z1 = parseDouble(values[2].c_str(), "z1");
+		double r1  = parseDouble(values[3].c_str(), "r1");
+		double r2  = parseDouble(values[4].c_str(), "r2");
+		double h  = parseDouble(values[5].c_str(), "h");
 
 		TopoDS_Shape shape = createCone(r1,r2,h);
 
@@ -473,14 +478,14 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
 	} else if(strcmp(argv[2],"extrusion:polygon")==0) {
 
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
@@ -488,12 +493,15 @@ void create(int argc, char *argv[]) {
 		std::vector<double> coords;
 
 		// first three entries define the extrusion vector (direction)
-		double ex = parseDouble(values[0]);
-		double ey = parseDouble(values[1]);
-		double ez = parseDouble(values[2]);
+		double ex = parseDouble(values[0], "ex");
+		double ey = parseDouble(values[1], "ey");
+		double ez = parseDouble(values[2], "ez");
 
 		for(size_t i = 3; i < values.size(); i++) {
-			double v = parseDouble(values[i]);
+
+		    std::string varName[] = {"x", "y", "z"};
+
+			double v = parseDouble(values[i], varName[i%3]+std::to_string(i));
 			coords.push_back(v);
 		}
 
@@ -506,7 +514,7 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
@@ -514,19 +522,19 @@ void create(int argc, char *argv[]) {
 	} else if(strcmp(argv[2],"extrusion:file")==0) {
 
 		if(argc != 6 && argc !=7) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
 		
 		if(values.size()!=3) {
-			error();
+            error("wrong number of values!");
 		}
 
 		// first three entries define the extrusion vector (direction)
-		double ex = parseDouble(values[0]);
-		double ey = parseDouble(values[1]);
-		double ez = parseDouble(values[2]);
+		double ex = parseDouble(values[0], "ex");
+		double ey = parseDouble(values[1], "ey");
+		double ez = parseDouble(values[2], "ez");
 
 		TopoDS_Shape shape = extrudeFile(ex,ey,ez,argv[4]);
 
@@ -535,7 +543,7 @@ void create(int argc, char *argv[]) {
 		double stlTOL;
 
 		if(argc == 7) {
-			stlTOL = parseDouble(argv[6]);
+			stlTOL = parseDouble(argv[6], "stlTOL");
 		} else {
 			stlTOL = 0.5;
 		}
@@ -545,7 +553,7 @@ void create(int argc, char *argv[]) {
 	} else if(strcmp(argv[2],"2d:circle")==0) {
 
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
@@ -553,12 +561,12 @@ void create(int argc, char *argv[]) {
 		std::vector<double> coords;
 
 		// first three entries define the extrusion vector (direction)
-		double x = parseDouble(values[0]);
-		double y = parseDouble(values[1]);
-		double r = parseDouble(values[2]);
+		double x = parseDouble(values[0], "x");
+		double y = parseDouble(values[1], "y");
+		double r = parseDouble(values[2], "r");
 
 		if(values.size()!=3) {
-			error();
+            error("wrong number of values!");
 		}
 
 		TopoDS_Shape shape = createCircle(x,y,0,0,0,1,r);
@@ -570,7 +578,7 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
@@ -578,7 +586,7 @@ void create(int argc, char *argv[]) {
 	} else if(strcmp(argv[2],"2d:polygon")==0) {
 
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
@@ -586,7 +594,7 @@ void create(int argc, char *argv[]) {
 		std::vector<double> coords;
 
 		for(size_t i = 0; i < values.size(); i++) {
-			double v = parseDouble(values[i]);
+			double v = parseDouble(values[i], i%2==0?"x":"y" + std::to_string(i));
 			coords.push_back(v);
 		}
 
@@ -599,7 +607,7 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
@@ -607,19 +615,19 @@ void create(int argc, char *argv[]) {
 	} else if(strcmp(argv[2],"2d:rect")==0) {
 
 		if(argc != 5 && argc !=6) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=4) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double x1 = parseDouble(values[0]);
-		double y1 = parseDouble(values[1]);
-		double x2 = parseDouble(values[2]);
-		double y2 = parseDouble(values[3]);
+		double x1 = parseDouble(values[0], "x1");
+		double y1 = parseDouble(values[1], "y1");
+		double x2 = parseDouble(values[2], "x2");
+		double y2 = parseDouble(values[3], "y2");
 
 		TopoDS_Shape shape = createRect2d(x1,y1,x2,y2);
 
@@ -630,7 +638,7 @@ void create(int argc, char *argv[]) {
 		if(argc == 5) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[5]);
+			stlTOL = parseDouble(argv[5], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
@@ -638,21 +646,21 @@ void create(int argc, char *argv[]) {
 	} else if(strcmp(argv[2],"2d:text")==0) {
 
 		if(argc != 8 && argc !=9) {
-			error();
+            error("wrong number of arguments!");
 		}
 
 		std::string fontFileName = argv[3];
 
-		double fontSize = parseDouble(argv[4]);
+		double fontSize = parseDouble(argv[4], "fontSize");
 
 		std::vector<std::string> values = split(argv[5], ',');
 
 		if(values.size()!=2) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double x = parseDouble(values[0]);
-		double y = parseDouble(values[1]);
+		double x = parseDouble(values[0], "x");
+		double y = parseDouble(values[1], "y");
 
 		std::string text = argv[6];
 
@@ -665,12 +673,12 @@ void create(int argc, char *argv[]) {
 		if(argc == 8) {
 			stlTOL = 0.5;
 		} else {
-			stlTOL = parseDouble(argv[8]);
+			stlTOL = parseDouble(argv[8], "stlTOL");
 		}
 
 		save(filename,shape, stlTOL);
 
-	} else error();
+	} else error("unknown command '" + std::string(argv[2]) + "'!");
 
 }
 
@@ -681,16 +689,16 @@ void convert(int argc, char *argv[]) {
 	  save(argv[3], srcShape, 0.5);
   } else if(argc == 5) {
 	  TopoDS_Shape srcShape    = load(argv[2]);
-	  save(argv[3], srcShape, parseDouble(argv[4]));
+	  save(argv[3], srcShape, parseDouble(argv[4], "stlTOL"));
   } else {
-	  error();
+      error("wrong number of arguments!");
   }
 
 }
 
 void csg(int argc, char *argv[]) {
 	if(argc != 6 && argc != 7) {
-		error();
+        error("wrong number of arguments!");
 	}
 
 	TopoDS_Shape res;
@@ -710,7 +718,7 @@ void csg(int argc, char *argv[]) {
 		BRepAlgoAPI_Common csg(s1, s2);
 		res = csg.Shape();
 	} else {
-		error();
+        error("unknown command '" + std::string(argv[2]) + "'!");
 	}
 
 	std::cout << " -> done." << std::endl;
@@ -718,7 +726,7 @@ void csg(int argc, char *argv[]) {
 	double stlTOL;
 
 	if(argc == 7) {
-		stlTOL = parseDouble(argv[6]);
+		stlTOL = parseDouble(argv[6], "stlTOL");
 	} else {
 		stlTOL = 0.5;
 	}
@@ -728,7 +736,7 @@ void csg(int argc, char *argv[]) {
 
 void bounds(int argc, char *argv[]) {
 	if(argc < 3 || argc > 5) {
-		error();
+        error("wrong number of arguments!");
 	}
 
 	TopoDS_Shape shape = load(argv[2]);
@@ -745,13 +753,13 @@ void bounds(int argc, char *argv[]) {
 	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
 	deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
 	
-	std::cout << " -> tesselating object" << std::endl;
-	// tesselation
+	std::cout << " -> tessellating object" << std::endl;
+	// tessellation
 	BRepMesh_IncrementalMesh mesh(shape, deflection);
 
     std::cout << " -> computing bounds" << std::endl;
 
-	// compute bbox with tesselation
+	// compute bbox with tessellation
 	box.SetVoid();
 	BRepBndLib::Add(shape, box);
 	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
@@ -765,7 +773,7 @@ void bounds(int argc, char *argv[]) {
 		double stlTOL;
 
 		if(argc == 5) {
-			stlTOL = parseDouble(argv[4]);
+			stlTOL = parseDouble(argv[4], "stlTOL");
 		} else {
 			stlTOL = 0.5;
 		}
@@ -779,7 +787,7 @@ void bounds(int argc, char *argv[]) {
 // ./occ-csg --transform translate x,y,z         file1.stp file1-translated.stp
 void transform(int argc, char *argv[]) {
 	if(argc != 6 && argc != 7) {
-		error();
+        error("wrong number of arguments!");
 	}
 
 	TopoDS_Shape shape = load(argv[4]);
@@ -788,12 +796,12 @@ void transform(int argc, char *argv[]) {
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=3) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double x1 = parseDouble(values[0]);
-		double y1 = parseDouble(values[1]);
-		double z1 = parseDouble(values[2]);
+		double x1 = parseDouble(values[0], "x1");
+		double y1 = parseDouble(values[1], "y1");
+		double z1 = parseDouble(values[2], "z1");
 
 		gp_Trsf transformation;
 		transformation.SetTranslation(gp_Vec(x1, y1, z1));
@@ -802,12 +810,12 @@ void transform(int argc, char *argv[]) {
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=3) {
-			error();
+            error("wrong number of values!");
 		}
 
-		double sx = parseDouble(values[0]);
-		double sy = parseDouble(values[1]);
-		double sz = parseDouble(values[2]);
+		double sx = parseDouble(values[0], "sx");
+		double sy = parseDouble(values[1], "sy");
+		double sz = parseDouble(values[2], "sz");
 
 		gp_GTrsf transformation;
 
@@ -821,7 +829,7 @@ void transform(int argc, char *argv[]) {
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=12) {
-			error();
+            error("wrong number of values!");
 		}
 
 		// transformation matrix
@@ -830,7 +838,8 @@ void transform(int argc, char *argv[]) {
 		// convert transformation matrix from args
 		for(size_t i = 0; i < 3;++i) {
 			for(size_t j = 0; j < 4;++j) {
-				m[i][j] = parseDouble(values[i+3*j].c_str());
+				int index = i+3*j;
+				m[i][j] = parseDouble(values[index].c_str(), "t" + std::to_string(index));
 			}
 		}
 
@@ -845,13 +854,13 @@ void transform(int argc, char *argv[]) {
 
 		shape = BRepBuilderAPI_GTransform(shape, tMat);
 	} else {
-		error();
+        error("unknown command '" + std::string(argv[2]) + "'!");
 	}
 
 	double stlTOL;
 
 	if(argc == 7) {
-		stlTOL = parseDouble(argv[6]);
+		stlTOL = parseDouble(argv[6], "stlTOL");
 	} else {
 		stlTOL = 0.5;
 	}
@@ -864,13 +873,15 @@ void editShape(int argc, char *argv[]) {
         splitShape(argc,argv);
     } else if(strcmp(argv[2],"round-edges")==0) {
         roundEdges(argc,argv);
+    } else {
+        error("unknown command '" + std::string(argv[2]) + "'!");
     }
 }
 
 void splitShape(int argc, char *argv[]) {
 
 	if(argc != 5 && argc != 6) {
-		error();
+        error("wrong number of arguments!");
 	}
 
 	std::string fileName = argv[3];
@@ -886,7 +897,7 @@ void splitShape(int argc, char *argv[]) {
 	double stlTOL;
 
 	if(argc == 6) {
-		stlTOL = parseDouble(argv[5]);
+		stlTOL = parseDouble(argv[5], "stlTOL");
 	} else {
 		stlTOL = 0.5;
 	}
@@ -933,10 +944,10 @@ void splitShape(int argc, char *argv[]) {
 void roundEdges(int argc, char* argv[]) {
 
     if(argc != 6 && argc != 7) {
-        error();
+        error("wrong number of arguments!");
     }
 
-    double radius = parseDouble(argv[3]);
+    double radius = parseDouble(argv[3], "radius");
 
     std::string fileName = argv[4];
     std::string outFileName = toLower(argv[5]);
@@ -959,7 +970,7 @@ void roundEdges(int argc, char* argv[]) {
     double stlTOL;
 
     if(argc == 7) {
-        stlTOL = parseDouble(argv[6]);
+        stlTOL = parseDouble(argv[6], "stlTOL");
     } else {
         stlTOL = 0.5;
     }
@@ -1216,6 +1227,7 @@ std::string toLower(std::string const &str) {
 }
 
 std::vector<std::string> split(std::string const &str, const char sep) {
+
 	std::stringstream ss(str);
 	std::vector<std::string> result;
 
@@ -1230,15 +1242,28 @@ std::vector<std::string> split(std::string const &str, const char sep) {
 }
 
 double parseDouble(std::string const &str) {
-	NUMBER_CONVERSION_ERROR ERR = VALID;
-	double res = parseDouble(str, &ERR);
+    return parseDouble(str, [](NUMBER_CONVERSION_ERROR e) -> void {
+        std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;
+    });
+}
 
-	if(ERR!=VALID) {
-		std::cerr << "ERROR: cannot convert number, error_code: " << ERR << std::endl;
-		exit(1);
-	}
+double parseDouble(std::string const &str, std::string const & varName) {
+    return parseDouble(str, [varName](NUMBER_CONVERSION_ERROR e) -> void {
+        std::cerr << "ERROR: cannot convert number '" << varName << "', error_code: " << e << std::endl;
+    });
+}
 
-	return res;
+double parseDouble(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR) > onError) {
+
+    NUMBER_CONVERSION_ERROR ERR = VALID;
+    double res = parseDouble(str, &ERR);
+
+    if(ERR!=VALID) {
+        onError(ERR);
+        exit(1);
+    }
+
+    return res;
 }
 
 double parseDouble(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR) {
@@ -1266,14 +1291,27 @@ double parseDouble(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR) {
 	}
 
 	return number;
-}  
+}
+
+
 
 int parseInt(std::string const &str) {
+    return parseInt(str, [](NUMBER_CONVERSION_ERROR e) -> void {std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;});
+}
+
+int parseInt(std::string const &str, std::string const & varName) {
+    return parseInt(str, [varName](NUMBER_CONVERSION_ERROR e) -> void {
+        std::cerr << "ERROR: cannot convert number '" << varName << "', error_code: " << e << std::endl;
+    });
+}
+
+int parseInt(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR) > onError) {
+
 	NUMBER_CONVERSION_ERROR ERR = VALID;
 	int res = parseInt(str, &ERR);
 
 	if(ERR!=VALID) {
-		std::cerr << "ERROR: cannot convert number, error_code: " << ERR << std::endl;
+		onError(ERR);
 		exit(1);
 	}
 
@@ -1281,6 +1319,7 @@ int parseInt(std::string const &str) {
 }
 
 int parseInt(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR) {
+
 	const char* buff = str.c_str();
 	char *end;
    
@@ -1312,8 +1351,8 @@ void notImplemented() {
 	exit(1);
 }
 
-void error() {
-	std::cerr << "> ERROR: wrong number of args" << std::endl;
+void error(std::string const & msg) {
+	std::cerr << "> ERROR: " << msg << std::endl << std::endl;
 	usage();
 	exit(1);
 }
@@ -1323,7 +1362,7 @@ void version() {
 }
 
 void usage() {
-	std::cerr << "> USAGE: " << std::endl;
+	std::cerr << "USAGE: " << std::endl;
 	std::cerr << std::endl;
 	std::cerr << "Help & Info:" << std::endl;
 	std::cerr << std::endl;
