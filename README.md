@@ -35,12 +35,12 @@ To get an overview over the CLI type `./occ-csg --help`:
 
 ```
 ------------------------------------------------------------
-------        CSG based on the OCE CAD Kernel         ------
-------                  Version 0.7                   ------
+------      CSG Tool based on the OCE CAD Kernel      ------
+------                  Version 0.8                   ------
 ------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                www.mihosoft.eu                 ------
 ------------------------------------------------------------
-> USAGE:
+USAGE: 
 
 Help & Info:
 
@@ -79,7 +79,8 @@ Boolean Operators, Constructive Solid Geometry (CSG):
 
 Shape Editing:
 
- occ-csg --split-shape shape.stp stp
+ occ-csg --edit split-shape shape.stp stp
+ occ-csg --edit round-edges radius shape.stp shape-rounded.stp
 
 Bounds:
 
