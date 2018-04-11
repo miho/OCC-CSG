@@ -498,10 +498,9 @@ void create(int argc, char *argv[]) {
 		double ey = parseDouble(values[1], "ey");
 		double ez = parseDouble(values[2], "ez");
 
+		std::string varName[] = {"x", "y", "z"};
+
 		for(size_t i = 3; i < values.size(); i++) {
-
-		    std::string varName[] = {"x", "y", "z"};
-
 			double v = parseDouble(values[i], varName[i%3]+std::to_string(i));
 			coords.push_back(v);
 		}
@@ -1242,11 +1241,11 @@ std::vector<std::string> split(std::string const &str, const char sep) {
 	return result;
 }
 
-double parseDouble(std::string const &str) {
-    return parseDouble(str, [](NUMBER_CONVERSION_ERROR e) -> void {
-        std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;
-    });
-}
+//double parseDouble(std::string const &str) {
+//    return parseDouble(str, [](NUMBER_CONVERSION_ERROR e) -> void {
+//        std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;
+//    });
+//}
 
 double parseDouble(std::string const &str, std::string const & varName) {
     return parseDouble(str, [varName](NUMBER_CONVERSION_ERROR e) -> void {
@@ -1296,9 +1295,9 @@ double parseDouble(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR) {
 
 
 
-int parseInt(std::string const &str) {
-    return parseInt(str, [](NUMBER_CONVERSION_ERROR e) -> void {std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;});
-}
+//int parseInt(std::string const &str) {
+//    return parseInt(str, [](NUMBER_CONVERSION_ERROR e) -> void {std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;});
+//}
 
 int parseInt(std::string const &str, std::string const & varName) {
     return parseInt(str, [varName](NUMBER_CONVERSION_ERROR e) -> void {
