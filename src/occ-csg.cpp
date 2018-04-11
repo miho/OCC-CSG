@@ -97,13 +97,19 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <gp_GTrsf.hxx>
 
+// shape editing
+#include <BRepFilletAPI_MakeFillet.hxx>
+
+
 // math (OCCT/OCE compliant)
 #include <math.hxx>
+
+
 #define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
 // version
-#define VERSION 0.7
+#define VERSION 0.8
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -119,6 +125,8 @@ TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
+void roundEdges(int argc, char* argv[]);
+void splitShape(int argc, char *argv[]);
 
 // minimal transform API
 TopoDS_Shape transform(TopoDS_Shape shape, double transform_matrix[12]);
@@ -133,7 +141,7 @@ void transform(int argc, char *argv[]);
 void convert(int argc, char *argv[]);
 void csg(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
-void splitShape(int argc, char *argv[]);
+void editShape(int argc, char *argv[]);
 
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
@@ -190,7 +198,7 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--convert")==0) convert(argc,argv);
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
 	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
-	else if(strcmp(argv[1], "--split-shape")==0) splitShape(argc,argv);
+	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error();
 
@@ -851,15 +859,23 @@ void transform(int argc, char *argv[]) {
 	save(argv[5], shape, stlTOL);
 }
 
+void editShape(int argc, char *argv[]) {
+    if(strcmp(argv[2],"split-shape")==0) {
+        splitShape(argc,argv);
+    } else if(strcmp(argv[2],"round-edges")==0) {
+        roundEdges(argc,argv);
+    }
+}
+
 void splitShape(int argc, char *argv[]) {
 
-	if(argc != 4 && argc != 5) {
+	if(argc != 5 && argc != 6) {
 		error();
 	}
 
-	std::string fileName = argv[2];
+	std::string fileName = argv[3];
 
-	std::string outputFormat = toLower(argv[3]);
+	std::string outputFormat = toLower(argv[4]);
 
 	if(!endsWith(outputFormat, "stl")
 	 && !endsWith(outputFormat, "stp")
@@ -869,8 +885,8 @@ void splitShape(int argc, char *argv[]) {
 
 	double stlTOL;
 
-	if(argc == 5) {
-		stlTOL = parseDouble(argv[4]);
+	if(argc == 6) {
+		stlTOL = parseDouble(argv[5]);
 	} else {
 		stlTOL = 0.5;
 	}
@@ -912,6 +928,44 @@ void splitShape(int argc, char *argv[]) {
 			save(faceFileName, faces[i], stlTOL);
 		}
 	}
+}
+
+void roundEdges(int argc, char* argv[]) {
+
+    if(argc != 6 && argc != 7) {
+        error();
+    }
+
+    double radius = parseDouble(argv[3]);
+
+    std::string fileName = argv[4];
+    std::string outFileName = toLower(argv[5]);
+
+    TopoDS_Shape shape = load(fileName);
+
+    BRepFilletAPI_MakeFillet roundEdges(shape);
+    // we add all edges to make fillets
+    TopExp_Explorer edgeExplorer(shape, TopAbs_EDGE);
+    while(edgeExplorer.More()){
+        TopoDS_Edge edge = TopoDS::Edge(edgeExplorer.Current());
+        roundEdges.Add(radius, edge);
+        edgeExplorer.Next();
+    }
+
+    // create fillets (rounded edges)
+    TopoDS_Shape shapeOut= roundEdges.Shape();
+
+
+    double stlTOL;
+
+    if(argc == 7) {
+        stlTOL = parseDouble(argv[6]);
+    } else {
+        stlTOL = 0.5;
+    }
+
+    save(outFileName, shapeOut, stlTOL);
+
 }
 
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -1308,7 +1362,8 @@ void usage() {
 	std::cerr << std::endl;
 	std::cerr << "Shape Editing:" << std::endl;
 	std::cerr << std::endl;
-    std::cerr << " occ-csg --split-shape shape.stp stp" << std::endl;
+    std::cerr << " occ-csg --edit split-shape shape.stp stp" << std::endl;
+    std::cerr << " occ-csg --edit round-edges radius shape.stp shape-rounded.stp" << std::endl;
 	std::cerr << std::endl;
 	std::cerr << "Bounds:" << std::endl;
 	std::cerr << std::endl;
