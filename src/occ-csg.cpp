@@ -747,12 +747,12 @@ void bounds(int argc, char *argv[]) {
 
     // compute bbox on geometric object
 	double xMin,yMin,zMin,xMax,yMax, zMax = 0;
-	Standard_Real aDeflection = 0.001, deflection;
+	Standard_Real aDeflection = 0.0001, deflection;
 	Bnd_Box box;
 	BRepBndLib::Add(shape, box);
 	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
 	deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
-	
+
 	std::cout << " -> tessellating object" << std::endl;
 	// tessellation
 	BRepMesh_IncrementalMesh mesh(shape, deflection);
