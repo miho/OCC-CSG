@@ -110,7 +110,7 @@
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
 // version
-#define VERSION 0.8
+#define VERSION 0.9
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -803,9 +803,21 @@ void transform(int argc, char *argv[]) {
 		double y1 = parseDouble(values[1], "y1");
 		double z1 = parseDouble(values[2], "z1");
 
-		gp_Trsf transformation;
-		transformation.SetTranslation(gp_Vec(x1, y1, z1));
-		shape = BRepBuilderAPI_GTransform(shape, transformation);
+		gp_Trsf tMat;
+		tMat.SetTranslation(gp_Vec(x1, y1, z1));
+//		shape = BRepBuilderAPI_GTransform(shape, transformation);
+//
+//
+//		gp_Trsf tMat;
+//
+//		tMat.SetValues(
+//				v[0], v[1],  v[2], v[3],
+//				v[4], v[5],  v[6], v[7],
+//				v[8], v[9], v[10], v[11]
+//		);
+
+		shape = BRepBuilderAPI_Transform(shape, tMat);
+
 	} else if(strcmp(argv[2],"scale")==0) {
 		std::vector<std::string> values = split(argv[3], ',');
 
@@ -817,14 +829,29 @@ void transform(int argc, char *argv[]) {
 		double sy = parseDouble(values[1], "sy");
 		double sz = parseDouble(values[2], "sz");
 
-		gp_GTrsf transformation;
+		gp_Trsf transformation;
 
-		transformation.SetValue(1,1,sx);
-		transformation.SetValue(2,2,sy);
-		transformation.SetValue(3,3,sz);
-		
+		transformation.SetValues(
+				sx, 0,  0, 0,
+				0, sy,  0, 0,
+				0,  0, sz, 0
+		);
 
-		shape = BRepBuilderAPI_GTransform(shape, transformation);
+		// set transformation matrix
+		gp_GTrsf gtMat;
+		gtMat.SetValue(1,1,sx);
+		gtMat.SetValue(2,2,sy);
+		gtMat.SetValue(3,3,sz);
+
+
+		if(sx == sy && sy == sz) {
+			std::cout << "uniform scale, using transform" << std::endl;
+			shape = BRepBuilderAPI_Transform(shape, transformation);
+		} else {
+			std::cout << "non-uniform scale, using gtransform" << std::endl;
+			shape = BRepBuilderAPI_GTransform(shape, gtMat);
+		}
+
 	} else if (strcmp(argv[2],"matrix")==0) {
 		std::vector<std::string> values = split(argv[3], ',');
 
@@ -835,24 +862,40 @@ void transform(int argc, char *argv[]) {
 		// transformation matrix
 		double m[3][4];
 
+		double v[12];
+
 		// convert transformation matrix from args
 		for(size_t i = 0; i < 3;++i) {
 			for(size_t j = 0; j < 4;++j) {
-				int index = i+3*j;
-				m[i][j] = parseDouble(values[index].c_str(), "t" + std::to_string(index));
+				size_t index = i*4+j;
+                m[i][j] = parseDouble(values[index].c_str(), "t" + std::to_string(index));
+                v[index] = parseDouble(values[index].c_str(), "t" + std::to_string(index));
 			}
 		}
 
-		gp_GTrsf tMat;
+		gp_Trsf tMat;
 
-		// set transformation matrix
+		tMat.SetValues(
+				v[0], v[1],  v[2], v[3],
+				v[4], v[5],  v[6], v[7],
+				v[8], v[9], v[10], v[11]
+		);
+
+  		// set transformation matrix
+		gp_GTrsf gtMat;
 		for(int i = 0; i < 3; i++) {
-			for(int j = 0; i < 4; j++) {
-				tMat.SetValue(i+1,j+1, m[i][j]);
+			for(int j = 0; j < 4; j++) {
+				gtMat.SetValue(i+1,j+1, m[i][j]);
 			}
 		}
 
-		shape = BRepBuilderAPI_GTransform(shape, tMat);
+		if(m[0][0] == m[1][1] && m[1][1] == m[2][2]) {
+			std::cout << "uniform scale, using transform" << std::endl;
+			shape = BRepBuilderAPI_Transform(shape, tMat);
+		} else {
+			std::cout << "non-uniform scale, using gtransform" << std::endl;
+			shape = BRepBuilderAPI_GTransform(shape, gtMat);
+		}
 	} else {
         error("unknown command '" + std::string(argv[2]) + "'!");
 	}
@@ -1026,12 +1069,12 @@ TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double>
 	}
 
     size_t numVerts = points.size()/3;
-	std::vector<TopoDS_Vertex> vertices;
+	std::vector<TopoDS_Vertex> vertices(numVerts);
 
 	for(size_t i = 0; i < points.size(); i+=3) {
+
 		gp_XYZ p;
 		p.SetCoord(points[i+0], points[i+1], points[i+2]);
-
 		vertices[i/3] = BRepBuilderAPI_MakeVertex(p);
 	}
 
