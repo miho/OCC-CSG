@@ -37,11 +37,12 @@ install:
   - vswhere -property installationPath
   - vswhere version
   - vswhere -version
-  -| if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
-     set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
-     rem Trim
-     set Version=!Version: =!
-     )
+  - |-
+       if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
+         set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
+         rem Trim
+         set Version=!Version: =!
+       )
      
   - dir (`vswhere -property installationPath`)\VC\Redist\MSVC\(`vswhere -property version`)
   # install FreeType 2.7.1
