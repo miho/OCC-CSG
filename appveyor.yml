@@ -47,13 +47,11 @@ install:
   
        REM if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCRedistVersion.default.txt" (
          set /p RedistVersion=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCRedistVersion.default.txt"
-
-         rem Trim
-         set RedistVersion=!RedistVersion: =!
        REM )
        
        echo "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
        dir "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
+       set REDIST_DIR="%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
        
        
   - vswhere -version 
