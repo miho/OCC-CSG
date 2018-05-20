@@ -35,7 +35,6 @@ cache:
 
 install:
   - vswhere -property installationPath
-  - vswhere version
   
   # find installation dir, replacement for %VS150COMNTOOLS%
   - |-
