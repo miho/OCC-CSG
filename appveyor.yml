@@ -42,6 +42,8 @@ install:
        for /f "usebackq tokens=*" %%a in (`vswhere -property installationPath`) do set InstallDir=%%a
       
        echo %InstallDir%\VC\Auxiliary\Build\
+       
+       dir %InstallDir%\VC\Auxiliary\Build\
   
        if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
          set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
