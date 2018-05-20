@@ -40,9 +40,7 @@ install:
   - |-
        setlocal enabledelayedexpansion
 
-       for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
-         set InstallDir=%%i
-       )
+       set InstallDir=(`vswhere -property installationPath`)
 
        if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
          set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
