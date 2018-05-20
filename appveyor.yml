@@ -45,12 +45,12 @@ install:
        
        dir "%InstallDir%\VC\Auxiliary\Build\"
   
-       if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
-         set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
+       REM if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCRedistVersion.default.txt" (
+         set /p RedistVersion=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCRedistVersion.default.txt"
 
          rem Trim
-         set Version=!Version: =!
-       )
+         set RedistVersion=!RedistVersion: =!
+       REM )
        
        if not "%Version%"=="" (
          rem 
