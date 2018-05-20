@@ -38,7 +38,8 @@ install:
   
   # find installation dir, replacement for %VS150COMNTOOLS%
   - |-
-       set InstallDir=`vswhere -property installationPath`
+       REM crappy windows bash replacement for bash's var=`mycommand` 
+       for /f "usebackq tokens=*" %%a in (`vswhere -property installationPath`) do set InstallDir=%%a
       
        echo %InstallDir%\VC\Auxiliary\Build\
   
