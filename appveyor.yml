@@ -35,7 +35,14 @@ cache:
 
 install:
   - vswhere -property installationPath
-  - vswhere -property version
+  - vswhere version
+  - vswhere -version
+  -| if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
+     set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
+     rem Trim
+     set Version=!Version: =!
+     )
+     
   - dir (`vswhere -property installationPath`)\VC\Redist\MSVC\(`vswhere -property version`)
   # install FreeType 2.7.1
   - curl -LfsS -o freetype-2.7.1.tar.gz https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
