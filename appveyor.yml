@@ -34,7 +34,7 @@ cache:
   - C:\projects\occ-csg\oce\
 
 install:
-  - %ProgramFiles(x86)%\"Microsoft Visual Studio"\Installer\vswhere
+  - vswhere -latest
   # install FreeType 2.7.1
   - curl -LfsS -o freetype-2.7.1.tar.gz https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
   - cmd.exe '/C 7z x "freetype-2.7.1.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1 -y > nul
