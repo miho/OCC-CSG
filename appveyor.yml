@@ -52,10 +52,8 @@ install:
          set RedistVersion=!RedistVersion: =!
        REM )
        
-       if not "%RedistVersion%"=="" (
-         rem 
-         dir "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
-       )
+       echo "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
+       dir "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
        
        
   - vswhere -version 
