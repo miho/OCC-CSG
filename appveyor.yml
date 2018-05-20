@@ -36,15 +36,32 @@ cache:
 install:
   - vswhere -property installationPath
   - vswhere version
-  - vswhere -version
+  
+  # find installation dir, replacement for %VS150COMNTOOLS%
   - |-
+       setlocal enabledelayedexpansion
+
+       for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+         set InstallDir=%%i
+       )
+
        if exist "%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt" (
          set /p Version=<"%InstallDir%\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt"
+
          rem Trim
          set Version=!Version: =!
        )
+       
+       if not "%Version%"=="" (
+         rem 
+         dir "%InstallDir%\VC\Redist\MSVC\%Version%\"
+       )
+       
+       
+  - vswhere -version 
+  
+  - echo %VS150COMNTOOLS%
      
-  - dir (`vswhere -property installationPath`)\VC\Redist\MSVC\(`vswhere -property version`)
   # install FreeType 2.7.1
   - curl -LfsS -o freetype-2.7.1.tar.gz https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
   - cmd.exe '/C 7z x "freetype-2.7.1.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1 -y > nul
