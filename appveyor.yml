@@ -82,6 +82,8 @@ after_build:
   - if not exist %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\bin mkdir %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\bin
   
   # copy redist dlls to release folder
+  - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\" 
+  - dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\"
   - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\vcruntime140.dll" %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\bin
   - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\vccorlib140.dll" %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\bin
   - cp "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.13.26020\x64\Microsoft.VC141.CRT\msvcp140.dll" %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64\bin
