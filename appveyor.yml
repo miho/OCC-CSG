@@ -52,9 +52,9 @@ install:
          set RedistVersion=!RedistVersion: =!
        REM )
        
-       if not "%Version%"=="" (
+       if not "%RedistVersion%"=="" (
          rem 
-         dir "%InstallDir%\VC\Redist\MSVC\%Version%\"
+         dir "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
        )
        
        
