@@ -72,7 +72,7 @@ script:
     #       ">> skipping build until ccache and compilation of oce works. restart task or schedule new task."
     #    TODO: is there a workaround for build jobs that take longer than 50 minutes?
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD make -j4 install > install_out.txt || export BUILD_SUCCESS=false ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then travis_wait 30 make -j8 install > install_out.txt || export BUILD_SUCCESS=false; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then travis_wait 30 make -j8 && make install > install_out.txt || export BUILD_SUCCESS=false; fi
     # show last 30 lines of install output
     - tail -n 30 install_out.txt
     
