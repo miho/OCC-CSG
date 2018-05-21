@@ -51,8 +51,7 @@ install:
        
        echo "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
        dir "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
-       setx REDIST_DIR "%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
-       REDIST_DIR="%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
+       set "REDIST_DIR=%InstallDir%\VC\Redist\MSVC\%RedistVersion%\"
      
   
   - echo %VS150COMNTOOLS%
