@@ -36,11 +36,13 @@ To get an overview over the CLI type `./occ-csg --help`:
 ```
 ------------------------------------------------------------
 ------      CSG Tool based on the OCE CAD Kernel      ------
-------                  Version 0.9                   ------
+------                 Version 0.9.1                  ------
 ------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                www.mihosoft.eu                 ------
 ------------------------------------------------------------
-USAGE: 
+> ERROR: wrong number of arguments!.
+
+USAGE:
 
 Help & Info:
 
@@ -53,6 +55,7 @@ Creating Primitives:
  occ-csg --create sphere x1,y1,z1,r                                sphere.stp
  occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp
  occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp
+ occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp
  occ-csg --create 2d:circle x,y,r                                  2dcircle.stp
  occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp
  occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp
