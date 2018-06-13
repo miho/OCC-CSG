@@ -110,7 +110,7 @@
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
 // version
-#define VERSION 0.9
+#define VERSION "0.9.1"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -119,6 +119,7 @@ TopoDS_Shape createCylinder(double r, double h);
 TopoDS_Shape createCylinder(double r, double h, double angle);
 TopoDS_Shape createCone(double r1, double r2, double h);
 TopoDS_Shape createCone(double r1, double r2, double h, double angle);
+TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices);
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points);
 TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &filename);
 TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r);
@@ -190,7 +191,7 @@ int main(int argc, char *argv[])
 	
 	std::cout << "------------------------------------------------------------" << std::endl;
     std::cout << "------      CSG Tool based on the OCE CAD Kernel      ------" << std::endl;
-	std::cout << "------                  Version " << VERSION << "                   ------" << std::endl;
+	std::cout << "------                 Version " << VERSION << "                  ------" << std::endl;
 	std::cout << "------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------" << std::endl;
 	std::cout << "------                www.mihosoft.eu                 ------" << std::endl;
 	std::cout << "------------------------------------------------------------" << std::endl;
@@ -678,6 +679,60 @@ void create(int argc, char *argv[]) {
 
 		save(filename,shape, stlTOL);
 
+	} else if(strcmp(argv[2],"polygons")==0) {
+		if(argc != 6 && argc !=7) {
+            error("wrong number of arguments!");
+		}
+
+		std::vector<std::string> vertex_strings = split(argv[3], ',');
+
+		std::vector<double> coords;
+
+		std::string varName[] = {"vertex x", "vertex y", "vertex z"};
+
+		for(size_t i = 0; i < vertex_strings.size(); i++) {
+			double coord = parseDouble(vertex_strings[i], varName[i%3]+std::to_string(i));
+			coords.push_back(coord);
+		}
+
+		std::cout << " -> number of vertex-coords: " << coords.size() << std::endl;
+
+		std::vector<std::string> strings = split(argv[4], ':');
+		std::vector<std::vector<std::string>> face_index_strings;
+
+		for(size_t i = 0; i < strings.size(); i++) {
+			std::cout << "  --> " << i << " " << strings[i] << std::endl;
+			face_index_strings.push_back(split(strings[i], ','));
+		}
+
+		std::vector<std::vector<int>> face_indices;
+
+		std::cout << " -> number of faces: " << face_index_strings.size() << std::endl;
+
+		for(size_t f_id = 0; f_id < face_index_strings.size(); f_id++) {
+			std::vector<int> indices;
+			std::cout << "  --- new face" << std::endl;
+			for(size_t i = 0; i < face_index_strings[f_id].size(); i++) {
+				int v = parseInt(face_index_strings[f_id][i], "index "+std::to_string(i));
+				std::cout << "  --- index " << v << std::endl;
+				indices.push_back(v);
+			}
+			face_indices.push_back(indices);
+		}
+
+		TopoDS_Shape shape = createPolygons(coords, face_indices);
+
+		std::string filename = argv[5];
+
+		double stlTOL;
+
+		if(argc == 6) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[7], "stlTOL");
+		}
+
+		save(filename,shape, stlTOL);
 	} else error("unknown command '" + std::string(argv[2]) + "'!");
 
 }
@@ -1061,6 +1116,93 @@ TopoDS_Shape createCone(double r1, double r2, double h, double angle) {
 	return cone;
 }
 
+TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices) {
+
+    if(points.size()%3!=0) {
+		std::cerr << "ERROR: wrong number count, must be multiples of 3, but is " << points.size() << std::endl;
+		exit(1);
+	}
+
+    size_t numVerts = points.size()/3;
+	std::vector<TopoDS_Vertex> vertices(numVerts);
+
+	// converting number list to vertices 
+	for(size_t i = 0; i < points.size(); i+=3) {
+		gp_XYZ p;
+		p.SetCoord(points[i+0], points[i+1], points[i+2]);
+		vertices[i/3] = BRepBuilderAPI_MakeVertex(p);
+	}
+
+	// creating faces
+	std::vector<TopoDS_Face> faces(indices.size());
+
+	for(size_t f_id = 0; f_id < indices.size(); f_id++) {
+		BRepBuilderAPI_MakePolygon polyMaker;
+
+		std::vector<int> face_indices = indices[f_id];
+
+		// add vertices to polygon
+		for(size_t v_id = 0; v_id < face_indices.size(); v_id++) {
+			polyMaker.Add(vertices[ face_indices[v_id] ]);
+		}
+
+		polyMaker.Close();
+
+		if(!polyMaker.IsDone()) {
+			std::cerr << "ERROR: cannot construct polygon for extrusion. Path invalid (e.g., crossing edges)" << std::endl;
+			exit(1);
+		}
+
+		TopoDS_Wire wire = polyMaker.Wire();
+
+		if(wire.IsNull()) {
+			std::cerr << "ERROR: cannot construct polygon for extrusion. Path invalid (e.g., crossing edges)" << std::endl;
+			exit(1);
+		}
+
+		TopoDS_Face face = BRepBuilderAPI_MakeFace( wire );
+
+		faces.push_back(face);
+		
+	} // end for each face
+
+	// sewing faces
+	BRepBuilderAPI_Sewing shapeSewer;
+
+	for(size_t f_id = 0; f_id < faces.size(); f_id++) {
+		shapeSewer.Add(faces[f_id]);
+	}
+
+	std::cout << " -> sewing faces" << std::endl;
+
+	shapeSewer.Perform();
+	TopoDS_Shape shape = shapeSewer.SewedShape();
+
+	std::cout << " -> extracting shells" << std::endl;
+    
+	BRepBuilderAPI_MakeSolid solidmaker;
+	TopTools_IndexedMapOfShape shellMap;
+	TopExp::MapShapes(shape, TopAbs_SHELL, shellMap);
+
+	unsigned int counter = 0;
+	for(int ishell = 1; ishell <= shellMap.Extent(); ++ishell) {
+    	const TopoDS_Shell& shell = TopoDS::Shell(shellMap(ishell));
+    	solidmaker.Add(shell);
+		counter++;
+	}
+
+	std::cout << "   -> shells found: " << counter << std::endl;
+
+	std::cout << " -> converting to solid" << std::endl;
+	
+	TopoDS_Shape solid = solidmaker.Solid();
+
+	std::cout << " -> done." << std::endl;
+
+	return solid;
+
+}
+
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points) {
 
     if(points.size()%3!=0) {
@@ -1418,6 +1560,7 @@ void usage() {
 	std::cerr << " occ-csg --create sphere x1,y1,z1,r                                sphere.stp" << std::endl;
 	std::cerr << " occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp" << std::endl;
 	std::cerr << " occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp" << std::endl;
+	std::cerr << " occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
