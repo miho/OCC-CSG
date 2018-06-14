@@ -9,7 +9,9 @@ This tool provides a simple command-line interface for applying boolean operatio
 
 ## Sample
 
-To get started quickly download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64).
+To get started quickly download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64). On macOS occ-csg can be installed via [Homebrew](https://brew.sh):
+
+    brew install miho/tap/occ-csg
 
 These three lines
 
