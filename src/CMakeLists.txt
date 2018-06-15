@@ -11,3 +11,5 @@ TKV3d      # font support
 TKFillet   # rounded edges (fillets)
 
 )
+
+install (TARGETS occ-csg DESTINATION bin)
