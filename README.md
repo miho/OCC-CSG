@@ -7,9 +7,13 @@ Simple but powerful CSG tool based on the OpenCascade CAD Kernel ([OCE](https://
 
 This tool provides a simple command-line interface for applying boolean operations and transformations to 3D objects specified in either BREP/STEP or STL format. It contains a convenient STL importer for converting mesh based geometries to an eqivalent BREP representation (might cause performance issues for large STL files). Geometries can be exported as STL files as well.
 
-## Sample
+## Installation
 
-To get started quickly download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64).
+To get started quickly download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64). On macOS occ-csg can be installed via [Homebrew](https://brew.sh):
+
+    brew install miho/tap/occ-csg
+
+## Sample
 
 These three lines
 
@@ -36,11 +40,13 @@ To get an overview over the CLI type `./occ-csg --help`:
 ```
 ------------------------------------------------------------
 ------      CSG Tool based on the OCE CAD Kernel      ------
-------                  Version 0.9                   ------
+------                 Version 0.9.1                  ------
 ------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                www.mihosoft.eu                 ------
 ------------------------------------------------------------
-USAGE: 
+> ERROR: wrong number of arguments!.
+
+USAGE:
 
 Help & Info:
 
@@ -53,6 +59,7 @@ Creating Primitives:
  occ-csg --create sphere x1,y1,z1,r                                sphere.stp
  occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp
  occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp
+ occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp
  occ-csg --create 2d:circle x,y,r                                  2dcircle.stp
  occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp
  occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp
