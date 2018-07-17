@@ -126,6 +126,7 @@
 #include <GeomAdaptor_HCurve.hxx>
 #include <GeomFill_Sweep.hxx>
 #include <GeomFill_CorrectedFrenet.hxx>
+#include <Geom2dAPI_PointsToBSpline.hxx>
 
 
 // version
@@ -1911,48 +1912,69 @@ static Handle(Law_BSpFunc) CreateLawFunc(const Handle(Geom2d_BSplineCurve)& lawC
     return new Law_BSpFunc(aBs, f, l);
 }
 
-int VariableSweep()
+int VariableSweep(/*const std::vector<double> &path_points, const std::vector<double> &radii*/)
 {
-    //---------------------------------------------------------------------------
-    // Stage 1: we start with a Bezier path for fun
-    //---------------------------------------------------------------------------
 
     TColgp_Array1OfPnt pathPoles(1, 4);
-    pathPoles(1) = gp_Pnt(0.0,   0.0,  0.0);
-    pathPoles(2) = gp_Pnt(2,  0, 10);
-    pathPoles(3) = gp_Pnt(0,  7, 20);
-    pathPoles(4) = gp_Pnt(3, 0, 30);
+    pathPoles(1) = gp_Pnt(0.0, 0.0, 0.0);
+    pathPoles(2) = gp_Pnt(10,  0.0, 0.0);
+    pathPoles(3) = gp_Pnt(20,  0.0, 0.0);
+    pathPoles(4) = gp_Pnt(30,  0.0, 0.0);
+
+
+//    if(path_points.size()%3!=0) {
+//        std::cerr << "ERROR: wrong number count, must be multiples of 3, but is " << path_points.size() << std::endl;
+//        exit(1);
+//    }
+//
+//    //---------------------------------------------------------------------------
+//    // Stage 1: we start with a Bezier path for fun
+//    //---------------------------------------------------------------------------
+//
+//    TColgp_Array1OfPnt pathPoles(1, path_points.size()/3);
+//
+//    for(size_t i = 1; i <= path_points.size()/3; i+=3) {
+//        pathPoles(i) = gp_Pnt(path_points[i+0],   path_points[i+1],  path_points[i+2]);
+//    }
+
     Handle(Geom_BezierCurve) path = new Geom_BezierCurve(pathPoles);
-    //
 
     //---------------------------------------------------------------------------
     // Stage 2: build law. Y coordinates define the radius
     //---------------------------------------------------------------------------
 
-    Handle(TColgp_HArray1OfPnt2d) law_pts    = new TColgp_HArray1OfPnt2d(1, 3);
-    Handle(TColStd_HArray1OfReal) law_params = new TColStd_HArray1OfReal(1, 3);
+    //Handle(TColgp_HArray1OfPnt2d) law_pts    = new TColgp_HArray1OfPnt2d(1, 4);
+    //Handle(TColStd_HArray1OfReal) law_params = new TColStd_HArray1OfReal(1, 5);
+
+	TColgp_Array1OfPnt2d law_pts(1, 5);
     //
-    gp_Pnt2d law_P1(0.0, 1), law_P2(0.5, 3), law_P3(1.0, 1);
-    law_pts->SetValue(1, law_P1);
-    law_pts->SetValue(2, law_P2);
-    law_pts->SetValue(3, law_P3);
+    law_pts.SetValue(1, gp_Pnt2d(0.0,1.0));
+    law_pts.SetValue(2, gp_Pnt2d(0.8,0.5));
+    law_pts.SetValue(3, gp_Pnt2d(0.9,2.0));
+    law_pts.SetValue(4, gp_Pnt2d(0.95,0.1));
+    law_pts.SetValue(5, gp_Pnt2d(1.0,0.1));
+
     //
-    law_params->SetValue(1, 0.0);
-    law_params->SetValue(2, 0.5);
-    law_params->SetValue(3, 1.0);
-    //
-    Geom2dAPI_Interpolate Interp( law_pts, law_params, 0, Precision::Confusion() );
-    Interp.Perform();
-    if ( !Interp.IsDone() )
-    {
-        std::cout << "Cannot build law curve" << std::endl;
-        return 1;
-    }
-    Handle(Geom2d_BSplineCurve) law_radius_curve = Interp.Curve();
+//    Geom2dAPI_Interpolate Interp( law_pts, /*law_params, */false, Precision::Confusion() );
+//    Interp.Perform();
+//    if ( !Interp.IsDone() )
+//    {
+//        std::cout << "Cannot build law curve" << std::endl;
+//        return 1;
+//    }
+
+	Geom2dAPI_PointsToBSpline Approx(law_pts);
+
+    Handle(Geom2d_BSplineCurve) law_radius_curve = Approx.Curve();
     //
     //
     Handle(Law_BSpFunc)
             law = ::CreateLawFunc( law_radius_curve, path->FirstParameter(), path->LastParameter() );
+
+    for(double i = 0; i < 1;i+=0.1) {
+    	std::cout << "value: " << law->Value(i) << "\n";
+    	// std::cout << "value: " << (law_radius_curve->Value(i).Coord().Y()) << std::endl;
+    }
 
     //---------------------------------------------------------------------------
     // Stage 3: now build sweep. X coordinates define the radius
@@ -1974,7 +1996,7 @@ int VariableSweep()
     locationLaw->SetCurve(pathAdt);
 
     // Construct sweep
-    GeomFill_Sweep Sweep(locationLaw, 0);
+    GeomFill_Sweep Sweep(locationLaw, true);
     Sweep.SetTolerance(prec);
     Sweep.Build(sectionLaw, GeomFill_Location, continuity, maxDegree, maxSegment);
     //
