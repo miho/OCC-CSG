@@ -105,9 +105,28 @@
 // math (OCCT/OCE compliant)
 #include <math.hxx>
 
-
 #define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
+
+
+// neuro experiment
+#include <TColgp_HArray1OfPnt2d.hxx>
+#include <TColgp_Array1OfPnt2d.hxx>
+#include <TColStd_HArray1OfReal.hxx>
+#include <TColStd_Array1OfReal.hxx>
+#include <TColStd_Array1OfInteger.hxx>
+#include <Geom2d_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
+#include <Law_BSpFunc.hxx>
+#include <Law_BSpline.hxx>
+#include <Geom2dAPI_Interpolate.hxx>
+#include <Geom_Circle.hxx>
+#include <GeomFill_EvolvedSection.hxx>
+#include <GeomFill_CurveAndTrihedron.hxx>
+#include <GeomAdaptor_HCurve.hxx>
+#include <GeomFill_Sweep.hxx>
+#include <GeomFill_CorrectedFrenet.hxx>
+
 
 // version
 #define VERSION "0.9.1"
@@ -127,6 +146,12 @@ TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
+
+// neuro experiment
+TopoDS_Edge  createCircleEdge(double x, double y, double z, double dx, double dy, double dz, double r);
+TopoDS_Face closedEdgeToFace(const TopoDS_Edge &edge);
+
+
 void roundEdges(int argc, char* argv[]);
 void splitShape(int argc, char *argv[]);
 
@@ -145,6 +170,9 @@ void convert(int argc, char *argv[]);
 void csg(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
 void editShape(int argc, char *argv[]);
+
+// neuro experiment
+void neuro(int argc, char *argv[]);
 
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
@@ -206,6 +234,7 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
 	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
 	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
+	else if(strcmp(argv[1], "--neuro")==0) neuro(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error("unknown command '" + std::string(argv[1]) + "'!");
 
@@ -1595,4 +1624,380 @@ void usage() {
 	std::cerr << " occ-csg --bounds file.stp" << std::endl;
 	std::cerr << " occ-csg --bounds file.stp bounds.stp" << std::endl;
 	std::cerr << std::endl;
+}
+
+
+// neuro experiment
+
+TopoDS_Edge createCircleEdge(double x, double y, double z, double dx, double dy, double dz, double r) {
+	gp_Dir dir(dx,dy,dz);
+	gp_Pnt point(x,y,z);
+	gp_Circ circle(gp_Ax2( point, dir), r);
+	BRepBuilderAPI_MakeEdge makeEdge(circle);
+
+	TopoDS_Edge edge = makeEdge.Edge();
+
+	if(edge.IsNull()) {
+		error("Cannot convert circle geometry to and edge!");
+	}
+
+	return edge;
+}
+
+TopoDS_Shape extrudeEdge( const TopoDS_Edge &edge, double ex, double ey, double ez) {
+	gp_Vec direction;
+
+	direction.SetX(ex);
+	direction.SetY(ey);
+	direction.SetZ(ez);
+
+	return BRepPrimAPI_MakePrism(edge, direction);
+}
+
+
+
+TopoDS_Face closedEdgeToFace(const TopoDS_Edge &edge) {
+    TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
+
+    TopoDS_Face shape;
+
+    if( !wire.IsNull()) {
+        TopoDS_Face face = BRepBuilderAPI_MakeFace( wire );
+        if(!face.IsNull()) {
+            shape = face;
+        }
+    }
+
+    return shape;
+}
+
+
+int VariableSweep();
+
+void neuro(int argc, char *argv[]) {
+
+	double rOuter = 1.0;
+	double rInner = 0.5;
+	double h = 5;
+
+	TopoDS_Edge bottomOuter = createCircleEdge(0,0,0, 0,0,1, rOuter);
+	TopoDS_Face outerMembrane = TopoDS::Face(extrudeEdge(bottomOuter, 0,0,h));
+
+	save("membrane-outer.stp", outerMembrane, 0.5);
+
+	TopoDS_Edge bottomInner = createCircleEdge(0,0,0, 0,0,1, rInner);
+    TopoDS_Face innerMembrane = TopoDS::Face(extrudeEdge(bottomInner, 0,0,h));
+
+	// close the bottom
+	TopoDS_Shape bottomFaceOuter = closedEdgeToFace(bottomOuter);
+    TopoDS_Face bottomFaceInner = closedEdgeToFace(bottomInner);
+
+    // make a hole in outer bottom
+    BRepAlgoAPI_Cut csg(bottomFaceOuter, bottomFaceInner);
+    bottomFaceOuter = csg.Shape();
+
+
+    double maxHeightOuter = 0;
+    TopoDS_Edge topOuter;
+    for(TopExp_Explorer anEdgeExplorer(outerMembrane, TopAbs_EDGE) ; anEdgeExplorer.More() ; anEdgeExplorer.Next()){
+        TopoDS_Edge edge = TopoDS::Edge(anEdgeExplorer.Current());
+
+        Standard_Real p1;
+        Standard_Real p2;
+
+        TopLoc_Location loc;
+
+        Handle(Geom_Curve) aCurve = BRep_Tool::Curve(edge, loc, p1, p2);
+
+        gp_XYZ xyz = loc.Transformation().TranslationPart();
+
+        std::cout << "Outer:EDGE" << edge.IsSame(bottomOuter) << xyz.X() << ", " << xyz.Y() << ", " << xyz.Z() << std::endl;
+
+        if(xyz.Z() > maxHeightOuter) {
+            maxHeightOuter = xyz.Z();
+            topOuter = edge;
+        }
+    }
+
+    double maxHeightInner = 0;
+    TopoDS_Edge topInner;
+    for(TopExp_Explorer anEdgeExplorer(innerMembrane, TopAbs_EDGE) ; anEdgeExplorer.More() ; anEdgeExplorer.Next()){
+        TopoDS_Edge edge = TopoDS::Edge(anEdgeExplorer.Current());
+
+        Standard_Real p1;
+        Standard_Real p2;
+
+        TopLoc_Location loc;
+
+        Handle(Geom_Curve) aCurve = BRep_Tool::Curve(edge, loc, p1, p2);
+
+        gp_XYZ xyz = loc.Transformation().TranslationPart();
+
+        std::cout << "Inner:EDGE" << edge.IsSame(bottomOuter) << xyz.X() << ", " << xyz.Y() << ", " << xyz.Z() << std::endl;
+
+        if(xyz.Z() > maxHeightInner) {
+            maxHeightInner = xyz.Z();
+            topInner = edge;
+        }
+    }
+
+    // close the top
+    TopoDS_Shape topFaceOuter = closedEdgeToFace(topOuter);
+    TopoDS_Face  topFaceInner = closedEdgeToFace(topInner);
+
+    // make a hole in outer top
+    BRepAlgoAPI_Cut csgTop(topFaceOuter, topFaceInner);
+    topFaceOuter = csgTop.Shape();
+
+	BRepBuilderAPI_Sewing shapeSewer;
+	shapeSewer.Add(bottomFaceOuter);
+	shapeSewer.Add(outerMembrane);
+    shapeSewer.Add(topFaceOuter);
+    shapeSewer.Add(innerMembrane);
+    shapeSewer.Add(bottomFaceInner);
+    shapeSewer.Add(topFaceInner);
+
+	shapeSewer.Perform();
+
+	TopoDS_Shape shape = shapeSewer.SewedShape();
+
+	save("neuro.stp", shape, 0.5);
+	save("neuro.stl", shape, 0.25);
+
+	// split the cylinders
+	std::vector<TopoDS_Shape> faces = splitShape(shape);
+
+	int counter = 0;
+	for(TopoDS_Shape face : faces) {
+        save("neuro-face-" + std::to_string(counter++) + ".stl", face, 0.25);
+	}
+
+    VariableSweep();
+}
+
+
+
+///*! Set radius evolution function with SetEvol() before calling this method.
+//
+//If \a theIsPolynomial is true tries to create polynomial B-Spline, otherwise - rational.
+//
+//\sa Surface(), Error().
+//*/
+//void ACISGGeom_Pipe::Perform (const Standard_Real theTol,
+//                              const Standard_Boolean theIsPolynomial,
+//                              const GeomAbs_Shape theContinuity,
+//                              const Standard_Integer theMaxDegree,
+//                              const Standard_Integer theMaxSegment)
+//{
+//    mySurface.Nullify();
+//    myError = -1.;
+//
+//    if (myEvol.IsNull())
+//        return;
+//
+////circular profile
+//    Handle(Geom_Circle) aCirc = new Geom_Circle (gp::XOY(), 1.);
+//    aCirc->Rotate (gp::OZ(), PI / 2.);
+//
+////code inspired by GeomFile_Pipe when using for constant radius and corrected
+////trihedron orientation
+//
+////perpendicular section
+//    Handle(GeomFill_SectionLaw) aSec = new GeomFill_EvolvedSection (aCirc, myEvol);
+//    Handle(GeomFill_LocationLaw) aLoc = new GeomFill_CurveAndTrihedron (
+//            new GeomFill_CorrectedFrenet);
+//    aLoc->SetCurve (myPath);
+//
+//    GeomFill_Sweep Sweep (aLoc, myIsElem);
+//    Sweep.SetTolerance (theTol);
+//    Sweep.Build (aSec, GeomFill_Location, theContinuity, theMaxDegree, theMaxSegment);
+//    if (Sweep.IsDone()) {
+//        mySurface = Sweep.Surface();
+//        myError = Sweep.ErrorOnSurface();
+//    }
+//}
+//
+///*! Creates an internal Law_BSpFunc object which represents an evolution function. Uses X
+//coordinates of the \a theEvol B-Spline curve.
+//
+//\a theFirst and \a theLast are boundaries of the path curve.
+//*/
+//static Handle(Law_BSpFunc) CreateBsFunction (const Handle(Geom2d_BSplineCurve)& theEvol,
+//                                             const Standard_Real theFirst,
+//                                             const Standard_Real theLast)
+//{
+////knots are recalculated from theEvol prorate to [theFirst, theLast] range
+//    Standard_Integer i;
+//    const Standard_Integer aNbP = theEvol->NbPoles();
+//    TColgp_Array1OfPnt2d aPArrE (1, aNbP);
+//    theEvol->Poles (aPArrE);
+//    TColStd_Array1OfReal aPArr (1, aNbP);
+//    for (i = 1; i <= aNbP; i++)
+//        aPArr(i) = aPArrE(i).X();
+//
+//    const Standard_Integer aNbK = theEvol->NbKnots();
+//    TColStd_Array1OfReal aKArrE (1, aNbK), aKArr (1, aNbK);
+//    theEvol->Knots (aKArrE);
+//    TColStd_Array1OfInteger aMArr (1, aNbK);
+//    theEvol->Multiplicities (aMArr);
+//
+//    const Standard_Real aKF = aKArrE(1), aKL = aKArrE (aNbK);
+//    const Standard_Real aKRatio = (theLast - theFirst) / (aKL - aKF);
+//    for (i = 1; i <= aNbK; i++) {
+//        aKArr(i) = theFirst + (aKArrE(i) - aKF) * aKRatio;
+//    }
+//
+//    Handle(Law_BSpline) aBs;
+//    if (theEvol->IsRational()) {
+//        TColStd_Array1OfReal aWArrE (1, aNbP);
+//        theEvol->Weights (aWArrE);
+//        aBs = new Law_BSpline (aPArr, aWArrE, aKArr, aMArr, theEvol->Degree(),
+//                               theEvol->IsPeriodic());
+//    } else {
+//        aBs = new Law_BSpline (aPArr, aKArr, aMArr, theEvol->Degree(), theEvol->IsPeriodic());
+//    }
+//
+//    Handle(Law_BSpFunc) aFunc = new Law_BSpFunc (aBs, theFirst, theLast);
+//    return aFunc;
+//}
+//
+///*! Uses X coordinates of the \a theEvol B-Spline curve to set evolution function.
+//*/
+//void ACISGGeom_Pipe::SetEvol (const Handle(Geom2d_BSplineCurve)& theEvol)
+//{
+//    myEvol = ::CreateBsFunction (theEvol, myPath->FirstParameter(), myPath->LastParameter());
+//}
+
+static Handle(Law_BSpFunc) CreateLawFunc(const Handle(Geom2d_BSplineCurve)& lawCurve,
+                                         const double                       f,
+                                         const double                       l)
+{
+    //---------------------------------------------------------------------------
+    // Knots are recalculated from lawCurve to fit into [f, l] range
+    //---------------------------------------------------------------------------
+
+    const int nPoles = lawCurve->NbPoles();
+    TColgp_Array1OfPnt2d aPArrE(1, nPoles);
+    lawCurve->Poles(aPArrE);
+    TColStd_Array1OfReal aPArr(1, nPoles);
+
+    // Y coordinates of poles are used to build one-dimensional b-curve
+    for ( int i = 1; i <= nPoles; i++ )
+        aPArr(i) = aPArrE(i).Y();
+
+    const int nKknots = lawCurve->NbKnots();
+    TColStd_Array1OfReal aKArrE(1, nKknots), aKArr(1, nKknots);
+    lawCurve->Knots(aKArrE);
+    TColStd_Array1OfInteger aMArr(1, nKknots);
+    lawCurve->Multiplicities(aMArr);
+
+    // Redistribute knots
+    const double aKF = aKArrE(1), aKL = aKArrE(nKknots);
+    const double aKRatio = (l - f) / (aKL - aKF);
+    for ( int i = 1; i <= nKknots; i++ )
+        aKArr(i) = f + (aKArrE(i) - aKF) * aKRatio;
+
+    // Build B-spline law
+    Handle(Law_BSpline) aBs;
+    if ( lawCurve->IsRational() )
+    {
+        TColStd_Array1OfReal aWArrE(1, nPoles);
+        lawCurve->Weights(aWArrE);
+        aBs = new Law_BSpline( aPArr, aWArrE, aKArr, aMArr, lawCurve->Degree(), lawCurve->IsPeriodic() );
+    }
+    else
+        aBs = new Law_BSpline( aPArr, aKArr, aMArr, lawCurve->Degree(), lawCurve->IsPeriodic() );
+
+    return new Law_BSpFunc(aBs, f, l);
+}
+
+int VariableSweep()
+{
+    //---------------------------------------------------------------------------
+    // Stage 1: we start with a Bezier path for fun
+    //---------------------------------------------------------------------------
+
+    TColgp_Array1OfPnt pathPoles(1, 4);
+    pathPoles(1) = gp_Pnt(0.0,   0.0,  0.0);
+    pathPoles(2) = gp_Pnt(2,  0, 10);
+    pathPoles(3) = gp_Pnt(0,  7, 20);
+    pathPoles(4) = gp_Pnt(3, 0, 30);
+    Handle(Geom_BezierCurve) path = new Geom_BezierCurve(pathPoles);
+    //
+
+    //---------------------------------------------------------------------------
+    // Stage 2: build law. Y coordinates define the radius
+    //---------------------------------------------------------------------------
+
+    Handle(TColgp_HArray1OfPnt2d) law_pts    = new TColgp_HArray1OfPnt2d(1, 3);
+    Handle(TColStd_HArray1OfReal) law_params = new TColStd_HArray1OfReal(1, 3);
+    //
+    gp_Pnt2d law_P1(0.0, 1), law_P2(0.5, 3), law_P3(1.0, 1);
+    law_pts->SetValue(1, law_P1);
+    law_pts->SetValue(2, law_P2);
+    law_pts->SetValue(3, law_P3);
+    //
+    law_params->SetValue(1, 0.0);
+    law_params->SetValue(2, 0.5);
+    law_params->SetValue(3, 1.0);
+    //
+    Geom2dAPI_Interpolate Interp( law_pts, law_params, 0, Precision::Confusion() );
+    Interp.Perform();
+    if ( !Interp.IsDone() )
+    {
+        std::cout << "Cannot build law curve" << std::endl;
+        return 1;
+    }
+    Handle(Geom2d_BSplineCurve) law_radius_curve = Interp.Curve();
+    //
+    //
+    Handle(Law_BSpFunc)
+            law = ::CreateLawFunc( law_radius_curve, path->FirstParameter(), path->LastParameter() );
+
+    //---------------------------------------------------------------------------
+    // Stage 3: now build sweep. X coordinates define the radius
+    //---------------------------------------------------------------------------
+
+    // Construction parameters
+    const double        prec       = 1.0e-6;
+    const GeomAbs_Shape continuity = GeomAbs_C2;
+    const int           maxDegree  = 25;
+    const int           maxSegment = 1000;
+
+    // Circular profile
+    Handle(Geom_Circle) circProfile = new Geom_Circle( gp::XOY(), 1. );
+
+    // Perpendicular section (Frenet makes it orthogonal)
+    Handle(GeomFill_SectionLaw)  sectionLaw  = new GeomFill_EvolvedSection(circProfile, law);
+    Handle(GeomFill_LocationLaw) locationLaw = new GeomFill_CurveAndTrihedron(new GeomFill_CorrectedFrenet);
+    Handle(GeomAdaptor_HCurve)   pathAdt     = new GeomAdaptor_HCurve(path);
+    locationLaw->SetCurve(pathAdt);
+
+    // Construct sweep
+    GeomFill_Sweep Sweep(locationLaw, 0);
+    Sweep.SetTolerance(prec);
+    Sweep.Build(sectionLaw, GeomFill_Location, continuity, maxDegree, maxSegment);
+    //
+    if ( !Sweep.IsDone() )
+    {
+        std::cout << "Error: cannot build evolved sweep" << std::endl;
+        return 1;
+    }
+
+    //---------------------------------------------------------------------------
+    // Stage 4: get the result
+    //---------------------------------------------------------------------------
+
+    Handle(Geom_Surface) S   = Sweep.Surface();
+    const double         err = Sweep.ErrorOnSurface();
+
+    std::cout << "Error: " << err << std::endl;
+
+
+    TopoDS_Shape face = BRepBuilderAPI_MakeFace(S, 1e-4);
+
+    save("varying_radius.stp", face, 0.01);
+    save("varying_radius.stl", face, 0.01);
+
+    return 0;
 }
