@@ -62,8 +62,9 @@
 
 // STL import
 #include <RWStl.hxx>
-#include <StlMesh_Mesh.hxx>
-#include <StlMesh_MeshExplorer.hxx>
+#include <Poly_Triangulation.hxx>
+//#include <StlMesh_Mesh.hxx>
+//#include <StlMesh_MeshExplorer.hxx>
 
 // relevant for importing stl files
 #include <OSD_Path.hxx>
@@ -91,7 +92,7 @@
 #include <Font_BRepFont.hxx>
 
 // TODO we have to upgrade to occt-7.2.x before using this class :(
-//#include <Font_BRepTextBuilder.hxx>
+#include <Font_BRepTextBuilder.hxx>
 
 // transform
 #include <BRepBuilderAPI_GTransform.hxx>
@@ -127,6 +128,9 @@
 #include <GeomFill_Sweep.hxx>
 #include <GeomFill_CorrectedFrenet.hxx>
 #include <Geom2dAPI_PointsToBSpline.hxx>
+#include <ShapeAnalysis_FreeBounds.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <ShapeUpgrade_UnifySameDomain.hxx>
 
 
 // version
@@ -253,11 +257,11 @@ TopoDS_Shape importSTL( std::string const &file )
 
 	std::cout << " -> reading '" << file << "'" << std::endl;
 
-    Handle(StlMesh_Mesh) aSTLMesh = RWStl::ReadFile(aFile);
+    Handle(Poly_Triangulation) aSTLMesh = RWStl::ReadFile(aFile);
 
-    Standard_Integer NumberDomains = aSTLMesh->NbDomains();
+    Standard_Integer numberOfTriangles = aSTLMesh->NbTriangles();
     
-    gp_XYZ p1, p2, p3;
+    // gp_XYZ p1, p2, p3;
     TopoDS_Vertex Vertex1, Vertex2, Vertex3;
 	TopoDS_Shape shape;
     TopoDS_Face face;
@@ -266,18 +270,29 @@ TopoDS_Shape importSTL( std::string const &file )
     Standard_Real x2, y2, z2;
     Standard_Real x3, y3, z3;
 
-    StlMesh_MeshExplorer aMExp (aSTLMesh);
 
 	std::cout << " -> converting to faces" << std::endl;
 
-    for (Standard_Integer iND=1;iND<=NumberDomains;iND++)
-    {
-	for (aMExp.InitTriangle (iND); aMExp.MoreTriangle (); aMExp.NextTriangle ())
+
+	for (Standard_Integer i = 1; i <= numberOfTriangles; i++)
 	{
-	    aMExp.TriangleVertices (x1,y1,z1,x2,y2,z2,x3,y3,z3);
-	    p1.SetCoord(x1,y1,z1);
-	    p2.SetCoord(x2,y2,z2);
-	    p3.SetCoord(x3,y3,z3);
+	    Poly_Triangle triangle = aSTLMesh->Triangle(i);
+
+	    //aMExp.TriangleVertices (x1,y1,z1,x2,y2,z2,x3,y3,z3);
+
+	    Standard_Integer n1;
+	    Standard_Integer n2;
+	    Standard_Integer n3;
+
+	    triangle.Get(n1, n2, n3);
+
+	    gp_Pnt p1 = aSTLMesh->Node(n1);
+	    gp_Pnt p2 = aSTLMesh->Node(n2);
+	    gp_Pnt p3 = aSTLMesh->Node(n3);
+
+//	    p1.SetCoord(x1,y1,z1);
+//	    p2.SetCoord(x2,y2,z2);
+//	    p3.SetCoord(x3,y3,z3);
 
 	    if (!p1.IsEqual(p2,0.0) && !p1.IsEqual(p3,0.0))
 	    {
@@ -293,9 +308,8 @@ TopoDS_Shape importSTL( std::string const &file )
 						shapeSewer.Add(face);
 					}
 				}
-			}
-		}
-    }
+	    }
+	}
 
 	std::cout << " -> sewing faces" << std::endl;
 
@@ -1367,26 +1381,27 @@ TopoDS_Shape createPolygon2d(std::vector<double> const &coords) {
 
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text) {
 
-    if(!isAccessible(font)) {
-		std::cerr << "ERROR: file '" << font << "' cannot be accessed!" << std::endl;
-		exit(1);
-	}
+//    if(!isAccessible(font)) {
+//		std::cerr << "ERROR: file '" << font << "' cannot be accessed!" << std::endl;
+//		exit(1);
+//	}
+//
+//	if(!endsWith(toLower(font), ".ttf")) {
+//		unsupportedFormat(font);
+//	}
+//
+//	Font_BRepFont fontObj(font.c_str(), fSize);
+//	TopoDS_Shape shape = fontObj.RenderText(text.c_str());
+//
+//	gp_Trsf transformation;
+//	transformation.SetTranslation(gp_Vec(x, y, 0));
+//	shape = BRepBuilderAPI_GTransform(shape, transformation);
+//
+//	return shape;
 
-	if(!endsWith(toLower(font), ".ttf")) {
-		unsupportedFormat(font);
-	}
-
-	Font_BRepFont fontObj(font.c_str(), fSize);
-	TopoDS_Shape shape = fontObj.RenderText(text.c_str());
-
-	gp_Trsf transformation;
-	transformation.SetTranslation(gp_Vec(x, y, 0));
-	shape = BRepBuilderAPI_GTransform(shape, transformation);
-
-	return shape;
-
-	//Font_BRepTextBuilder textBuilder;
-    //TopoDS_Shape textShape = textBuilder.Perform(font, NCollection_String(text));
+	Font_BRepTextBuilder textBuilder;
+    Font_BRepFont fontObj(font.c_str(), fSize);
+    TopoDS_Shape textShape = textBuilder.Perform(fontObj, NCollection_String(text.c_str()));
 }
 
 TopoDS_Shape transform(TopoDS_Shape const &shape, double transform_matrix[12]) {
@@ -1673,9 +1688,105 @@ TopoDS_Face closedEdgeToFace(const TopoDS_Edge &edge) {
 }
 
 
-int VariableSweep();
+TopoDS_Shape variableSweep(const std::vector<double> &path_points, const std::vector<double> &radii, bool close);
 
 void neuro(int argc, char *argv[]) {
+
+    std::vector<double> path_points_outer;
+    path_points_outer.push_back(-20);path_points_outer.push_back(0);path_points_outer.push_back(0);
+    path_points_outer.push_back(  0);path_points_outer.push_back(0);path_points_outer.push_back(0);
+    path_points_outer.push_back( 20);path_points_outer.push_back(0);path_points_outer.push_back(0);
+
+    std::vector<double> radii_outer;
+    radii_outer.push_back(5.0);
+    radii_outer.push_back(10.0);
+    radii_outer.push_back(5.0);
+
+    std::vector<double> path_points_inner;
+    path_points_inner.push_back(-25);path_points_inner.push_back(0);path_points_inner.push_back(0);
+    path_points_inner.push_back( 0);path_points_inner.push_back(0);path_points_inner.push_back(0);
+    path_points_inner.push_back( 25);path_points_inner.push_back(0);path_points_inner.push_back(0);
+
+    std::vector<double> radii_inner;
+
+    for(double rInner : radii_outer) {
+        radii_inner.push_back(rInner-3);
+    }
+
+    double stlTOL = 0.5;
+
+    TopoDS_Shape membraneOuter = variableSweep(path_points_outer, radii_outer,true);
+    TopoDS_Shape membraneInner = variableSweep(path_points_inner, radii_inner,true);
+
+
+    ShapeUpgrade_UnifySameDomain simplifyShapeOuter(membraneOuter,true,true,true);
+    simplifyShapeOuter.Build();
+    membraneOuter = simplifyShapeOuter.Shape();
+    save("dendrite-variable-er-outer.stl", membraneOuter, stlTOL);
+    ShapeUpgrade_UnifySameDomain simplifyShapeInner(membraneInner,true,true,true);
+    simplifyShapeInner.Build();
+    membraneInner = simplifyShapeInner.Shape();
+    save("dendrite-variable-er-inner.stl", membraneInner, stlTOL);
+
+    BRepAlgoAPI_Cut difference(membraneOuter, membraneInner);
+    TopoDS_Shape dendrite = difference.Shape();
+
+    save("dendrite-variable-er.stp", dendrite, stlTOL);
+    save("dendrite-variable-er.stl", dendrite, stlTOL);
+
+    // split the cylinders
+    std::vector<TopoDS_Shape> facesOuter = splitShape(membraneOuter);
+
+    int counter = 0;
+    for(TopoDS_Shape face : facesOuter) {
+        save("dendrite-variable-er-outer-face-" + std::to_string(counter++) + ".stl", face, stlTOL);
+    }
+
+    // split the cylinders
+    std::vector<TopoDS_Shape> facesInner = splitShape(membraneInner);
+
+    counter = 0;
+    for(TopoDS_Shape face : facesOuter) {
+        save("dendrite-variable-er-inner-face-" + std::to_string(counter++) + ".stl", face, stlTOL);
+    }
+}
+
+void neuroCyl(int argc, char *argv[]) {
+    double rOuter = 1.0;
+    double rInner = 0.5;
+    double hOuter = 5;
+    double hInner = 6;
+
+    TopoDS_Shape cylOuter = createCone(rOuter, rOuter*1.5, hOuter);
+    TopoDS_Shape cylInner = createCone(rInner, rInner*1.5, hInner);
+
+    double x1 = 0;
+    double y1 = 0;
+    double z1 = (hOuter-hInner)*0.5;
+
+    gp_Trsf tMat;
+    tMat.SetTranslation(gp_Vec(x1, y1, z1));
+
+    cylInner = BRepBuilderAPI_Transform(cylInner, tMat);
+
+    BRepAlgoAPI_Cut difference(cylOuter, cylInner);
+    TopoDS_Shape dendrite = difference.Shape();
+
+    double stlTOL = 0.25;
+
+    save("dendrite-er.stp", dendrite, stlTOL);
+    save("dendrite-er.stl", dendrite, stlTOL);
+
+    // split the cylinders
+    std::vector<TopoDS_Shape> faces = splitShape(dendrite);
+
+    int counter = 0;
+    for(TopoDS_Shape face : faces) {
+        save("dendrite-er-face-" + std::to_string(counter++) + ".stl", face, stlTOL);
+    }
+}
+
+/*void neuro(int argc, char *argv[]) {
 
 	double rOuter = 1.0;
 	double rInner = 0.5;
@@ -1774,7 +1885,9 @@ void neuro(int argc, char *argv[]) {
 	}
 
     VariableSweep();
-}
+}*/
+
+
 
 
 
@@ -1869,7 +1982,7 @@ void neuro(int argc, char *argv[]) {
 //    myEvol = ::CreateBsFunction (theEvol, myPath->FirstParameter(), myPath->LastParameter());
 //}
 
-static Handle(Law_BSpFunc) CreateLawFunc(const Handle(Geom2d_BSplineCurve)& lawCurve,
+static Handle(Law_BSpFunc) createLawFunc(const Handle(Geom2d_BSplineCurve)& lawCurve,
                                          const double                       f,
                                          const double                       l)
 {
@@ -1912,30 +2025,32 @@ static Handle(Law_BSpFunc) CreateLawFunc(const Handle(Geom2d_BSplineCurve)& lawC
     return new Law_BSpFunc(aBs, f, l);
 }
 
-int VariableSweep(/*const std::vector<double> &path_points, const std::vector<double> &radii*/)
+TopoDS_Shape variableSweep(const std::vector<double> &path_points, const std::vector<double> &radii, bool close)
 {
 
-    TColgp_Array1OfPnt pathPoles(1, 4);
-    pathPoles(1) = gp_Pnt(0.0, 0.0, 0.0);
-    pathPoles(2) = gp_Pnt(10,  0.0, 0.0);
-    pathPoles(3) = gp_Pnt(20,  0.0, 0.0);
-    pathPoles(4) = gp_Pnt(30,  0.0, 0.0);
+//    TColgp_Array1OfPnt pathPoles(1, 4);
+//    pathPoles(1) = gp_Pnt(0.0, 0.0, 0.0);
+//    pathPoles(2) = gp_Pnt(10,  0.0, 0.0);
+//    pathPoles(3) = gp_Pnt(20,  0.0, 0.0);
+//    pathPoles(4) = gp_Pnt(30,  0.0, 0.0);
 
+    if(path_points.size()%3!=0) {
+        std::cerr << "ERROR: wrong number count, must be multiples of 3, but is " << path_points.size() << std::endl;
+        exit(1);
+    }
 
-//    if(path_points.size()%3!=0) {
-//        std::cerr << "ERROR: wrong number count, must be multiples of 3, but is " << path_points.size() << std::endl;
-//        exit(1);
-//    }
-//
-//    //---------------------------------------------------------------------------
-//    // Stage 1: we start with a Bezier path for fun
-//    //---------------------------------------------------------------------------
-//
-//    TColgp_Array1OfPnt pathPoles(1, path_points.size()/3);
-//
-//    for(size_t i = 1; i <= path_points.size()/3; i+=3) {
-//        pathPoles(i) = gp_Pnt(path_points[i+0],   path_points[i+1],  path_points[i+2]);
-//    }
+    //---------------------------------------------------------------------------
+    // Stage 1: we start with a Bezier path for fun
+    //---------------------------------------------------------------------------
+
+    TColgp_Array1OfPnt pathPoles(1, path_points.size()/3);
+
+    std::cout << "#" << (path_points.size()/3) << std::endl;
+
+    for(size_t i = 0; i < path_points.size(); i+=3) {
+        std::cout << "I" << (i/3+1) << ": " << path_points[i+0] << ", " << path_points[i+1] << ", " << path_points[i+2] << std::endl;
+        pathPoles(i/3+1) = gp_Pnt(path_points[i+0],   path_points[i+1],  path_points[i+2]);
+    }
 
     Handle(Geom_BezierCurve) path = new Geom_BezierCurve(pathPoles);
 
@@ -1946,13 +2061,20 @@ int VariableSweep(/*const std::vector<double> &path_points, const std::vector<do
     //Handle(TColgp_HArray1OfPnt2d) law_pts    = new TColgp_HArray1OfPnt2d(1, 4);
     //Handle(TColStd_HArray1OfReal) law_params = new TColStd_HArray1OfReal(1, 5);
 
-	TColgp_Array1OfPnt2d law_pts(1, 5);
-    //
-    law_pts.SetValue(1, gp_Pnt2d(0.0,1.0));
-    law_pts.SetValue(2, gp_Pnt2d(0.8,0.5));
-    law_pts.SetValue(3, gp_Pnt2d(0.9,2.0));
-    law_pts.SetValue(4, gp_Pnt2d(0.95,0.1));
-    law_pts.SetValue(5, gp_Pnt2d(1.0,0.1));
+    // TODO 19.07.2018 fix interpolation of radii position (currently equidistant curve points only)
+	TColgp_Array1OfPnt2d law_pts(1, path_points.size()/3);
+	int numSteps = path_points.size()/3;
+	double step = 1.0/numSteps;
+    for(size_t i = 0; i < numSteps; i++) {
+        law_pts.SetValue(i+1, gp_Pnt2d(step*i,radii[i]));
+    }
+
+//    //
+//    law_pts.SetValue(1, gp_Pnt2d(0.0,1.0));
+//    law_pts.SetValue(2, gp_Pnt2d(0.8,0.5));
+//    law_pts.SetValue(3, gp_Pnt2d(0.9,2.0));
+//    law_pts.SetValue(4, gp_Pnt2d(0.95,0.1));
+//    law_pts.SetValue(5, gp_Pnt2d(1.0,0.1));
 
     //
 //    Geom2dAPI_Interpolate Interp( law_pts, /*law_params, */false, Precision::Confusion() );
@@ -1969,7 +2091,7 @@ int VariableSweep(/*const std::vector<double> &path_points, const std::vector<do
     //
     //
     Handle(Law_BSpFunc)
-            law = ::CreateLawFunc( law_radius_curve, path->FirstParameter(), path->LastParameter() );
+            law = createLawFunc( law_radius_curve, path->FirstParameter(), path->LastParameter() );
 
     for(double i = 0; i < 1;i+=0.1) {
     	std::cout << "value: " << law->Value(i) << "\n";
@@ -1981,8 +2103,8 @@ int VariableSweep(/*const std::vector<double> &path_points, const std::vector<do
     //---------------------------------------------------------------------------
 
     // Construction parameters
-    const double        prec       = 1.0e-6;
-    const GeomAbs_Shape continuity = GeomAbs_C2;
+    const double        prec       = 1.0e-4;
+    const GeomAbs_Shape continuity = GeomAbs_C1;
     const int           maxDegree  = 25;
     const int           maxSegment = 1000;
 
@@ -1995,6 +2117,7 @@ int VariableSweep(/*const std::vector<double> &path_points, const std::vector<do
     Handle(GeomAdaptor_HCurve)   pathAdt     = new GeomAdaptor_HCurve(path);
     locationLaw->SetCurve(pathAdt);
 
+
     // Construct sweep
     GeomFill_Sweep Sweep(locationLaw, true);
     Sweep.SetTolerance(prec);
@@ -2002,24 +2125,103 @@ int VariableSweep(/*const std::vector<double> &path_points, const std::vector<do
     //
     if ( !Sweep.IsDone() )
     {
-        std::cout << "Error: cannot build evolved sweep" << std::endl;
-        return 1;
+        error("Error: cannot build evolved sweep");
+
     }
 
     //---------------------------------------------------------------------------
     // Stage 4: get the result
     //---------------------------------------------------------------------------
-
     Handle(Geom_Surface) S   = Sweep.Surface();
     const double         err = Sweep.ErrorOnSurface();
 
     std::cout << "Error: " << err << std::endl;
 
-
     TopoDS_Shape face = BRepBuilderAPI_MakeFace(S, 1e-4);
 
-    save("varying_radius.stp", face, 0.01);
-    save("varying_radius.stl", face, 0.01);
+    std::vector<TopoDS_Shape> holes_to_close;
 
-    return 0;
+    TopoDS_Shape result;
+
+    if(close) {
+        for(TopExp_Explorer anEdgeExplorer(face, TopAbs_EDGE) ; anEdgeExplorer.More() ; anEdgeExplorer.Next()) {
+            TopoDS_Edge edge = TopoDS::Edge(anEdgeExplorer.Current());
+
+            Standard_Real p1;
+            Standard_Real p2;
+
+            TopLoc_Location loc;
+
+            Handle(Geom_Curve) aCurve = BRep_Tool::Curve(edge, loc, p1, p2);
+
+            gp_XYZ xyz = loc.Transformation().TranslationPart();
+
+            std::cout << "EDGE" << xyz.X() << ", " << xyz.Y() << ", " << xyz.Z() << std::endl;
+            std::cout << " -> closed: " << p2 << std::endl;
+
+            TopoDS_Shape edgeShape = closedEdgeToFace(edge);
+
+//            GProp_GProps System;
+//            BRepGProp::LinearProperties(edgeShape, System);
+//            BRepGProp::SurfaceProperties(edgeShape, System);
+//            BRepGProp::VolumeProperties(edgeShape, System);
+//            double area = System.Mass();
+//
+//            std::cout << "EDGE area: " << area << std::endl;
+//
+//            if(area > 0)
+
+            //if(p2 > 6)
+
+
+            //Analysis of Edge
+            Standard_Real First, Last;
+            Handle(Geom_Curve) curve = BRep_Tool::Curve(edge,First,Last); //Extract the curve from the edge
+            GeomAdaptor_Curve aAdaptedCurve(curve);
+            GeomAbs_CurveType curveType = aAdaptedCurve.GetType();
+            gp_Pnt pnt1, pnt2;
+            aAdaptedCurve.D0(First,pnt1);
+            aAdaptedCurve.D0(Last,pnt2);
+            int nPoles = 2;
+            if (curveType == GeomAbs_BezierCurve || curveType == GeomAbs_BSplineCurve)
+                nPoles = aAdaptedCurve.NbPoles();
+
+            std::cout << " -> " << nPoles << ": " << curveType << " p1x: " << pnt1.X() << " p1y: " << pnt1.Y() << ", p2x: " << pnt1.X() << " p2y: " << pnt1.Y() << ", closed: " << aAdaptedCurve.IsClosed() << std::endl;
+
+            if (BRep_Tool::Degenerated (edge)) {
+                std::cout << "degenerated: " << std::endl;
+            }
+
+            bool curveClosed = aAdaptedCurve.IsClosed();
+
+
+            if(curveClosed) {
+                holes_to_close.push_back(edgeShape);
+            }
+        }
+
+        BRepBuilderAPI_Sewing shapeSewer;
+        shapeSewer.Add(face);
+        for(TopoDS_Shape s : holes_to_close) {
+            shapeSewer.Add(s);
+        }
+
+        shapeSewer.Perform();
+
+        TopoDS_Shape shape = shapeSewer.SewedShape();
+
+        result = shape;
+
+        BRepCheck_Analyzer valid(result);
+        bool validity = valid.IsValid();
+        std::cout << "VALID: " << validity << std::endl;
+
+    } else {
+        result = face;
+    } // end if closed
+
+    save("varying_radius.stp", result, 0.1);
+    save("varying_radius.stl", result, 0.1);
+
+    return result;
 }
