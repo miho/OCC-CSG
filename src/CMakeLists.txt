@@ -11,6 +11,8 @@ ${OpenCASCADE_LIBRARIES}
 #TKV3d      # font support
 #TKFillet   # rounded edges (fillets)
 
+        freetype
+
 )
 
 install (TARGETS occ-csg DESTINATION bin)

@@ -35,6 +35,7 @@ endif()
 
 #find_package(Freetype REQUIRED)
 #include_directories(${FREETYPE_INCLUDE_DIRS})
+#link_directories(${FREETYPE_LIBRARY_DIR})
 
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
