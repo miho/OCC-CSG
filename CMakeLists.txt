@@ -15,12 +15,14 @@ find_package(OpenCASCADE COMPONENTS ModelingData REQUIRED)
 find_package(OpenCASCADE COMPONENTS DataExchange REQUIRED)
 find_package(OpenCASCADE COMPONENTS Visualization REQUIRED)
 include_directories(${OpenCASCADE_INCLUDE_DIR})
+MESSAGE("OCC-Include-Dir: ${OpenCASCADE_INCLUDE_DIR}")
 link_directories(${OpenCASCADE_LIBRARY_DIR})
+MESSAGE("OCC-Lib-Dir-Dir: ${OpenCASCADE_LIBRARY_DIR}")
 
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/freetype/include")
+#include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/freetype/include")
 
 # Find openmp libraries
 

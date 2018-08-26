@@ -148,9 +148,6 @@ void csg(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
 void editShape(int argc, char *argv[]);
 
-// neuro experiment
-void neuro(int argc, char *argv[]);
-
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
 bool save(std::string const &filename, TopoDS_Shape shape, double stlTOL);
@@ -211,7 +208,6 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
 	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
 	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
-	else if(strcmp(argv[1], "--neuro")==0) neuro(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error("unknown command '" + std::string(argv[1]) + "'!");
 
