@@ -135,6 +135,6 @@ deploy:
       appveyor_repo_tag: true
       
     auth_token:
-      secure: R+KuFwD7fxyhPRJUEDg4raWGX1H4NZiEN1LM74aADv8pCa3Rz0CXzKBixMK8gxwQ
+      secure: /ddnyu9MLzn54G1wfEPwHediFYZH9lBtXONJMgqe/igfzLoWsC9ctr4vBVd95j22
       
     # artifact: %APPVEYOR_BUILD_FOLDER%\release\occ-csg-%APPVEYOR_REPO_TAG_NAME%-windows-x64.zip
