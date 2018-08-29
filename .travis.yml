@@ -3,6 +3,7 @@ sudo: false
 addons:
     apt:
       packages:
+       - unzip
        - make
        - cmake-data
        - cmake
@@ -49,9 +50,9 @@ script:
     - mkdir -p dependencies
     - cd dependencies
     - if [ "$TRAVIS_OS_NAME" == "linux" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-linux-x64.zip -LO ; fi
-    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then tar xvzf opencascade-$OCC_VERSION-linux-x64.zip ; fi
+    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then unzip opencascade-$OCC_VERSION-linux-x64.zip ; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-macos.zip -LO ; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then tar xvzf opencascade-$OCC_VERSION-macos-x64.zip ; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then unzip opencascade-$OCC_VERSION-macos-x64.zip ; fi
     
     - cd $OUR_DIR
     
