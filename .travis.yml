@@ -22,59 +22,39 @@ matrix:
 cache:
   ccache: true
   directories:
-   - $HOME/Library/Caches/Homebrew
+   #- $HOME/Library/Caches/Homebrew
    # TODO: how can we do conditional caching of directories (depending on OS)
    #- /home/travis/build/miho/OCC-CSG/oce-OCE-0.18.3
-   - /Users/travis/build/miho/OCC-CSG/oce-OCE-0.18.3 
+   #- /Users/travis/build/miho/OCC-CSG/oce-OCE-0.18.3 
 
 env:
   global:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=/usr/lib/ccache:${PATH}; fi
+    - OCC_VERSION="v7.3.0.2"
+    #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=/usr/lib/ccache:${PATH}; fi
     - TIMEOUT_BUILD='30m'
     - BUILD_SUCCESS=true
     
 before_install:
   # installing ccache and freetype packages via homebrew
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
+  #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+  #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
   # adding timeout command to path for os x
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH="$PATH:/usr/local/opt/coreutils/libexec/gnubin"; fi
+  #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH="$PATH:/usr/local/opt/coreutils/libexec/gnubin"; fi
   
 script: 
     - export OUR_DIR=$(pwd)
     - echo "home directory $OUR_DIR"
     
-    # downloading and building static freetype
-    - wget https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
-    - tar xzf freetype-2.7.1.tar.gz
-    - cd freetype-2.7.1; mkdir -p build; cd build;
-    - cmake .. -DWITH_ZLIB=OFF -DWITH_HarfBuzz=OFF -DWITH_PNG=OFF -DWITH_BZip2=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../installation;
-    - make -j2 && make install
-    - cd ../../
-    
-    # downloading OCE
-    - if [ ! -f OCE-0.18.3.tar.gz ]; then wget https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz; fi
-    - if [ ! -f oce-OCE-0.18.3 ]; then tar xzf OCE-0.18.3.tar.gz; fi
-    - cd oce-OCE-0.18.3
-    - mkdir -p build && mkdir -p installation && cd build
+    # downloading occ
+    - mkdir -p dependencies
+    - if [ "$TRAVIS_OS_NAME" == "linux" ] wget https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-linux-x64.zip
+    - if [ "$TRAVIS_OS_NAME" == "linux" ] tar xvzf dependencies/opencascade-$OCC_VERSION-linux-x64.zip
+    - if [ "$TRAVIS_OS_NAME" == "osx" ] wget https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-macos.zip
+    - if [ "$TRAVIS_OS_NAME" == "osx" ] tar xvzf dependencies/opencascade-$OCC_VERSION-macos-x64.zip
     
     # setting OCE install dir
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export OCE_INSTALL_DIR=$(pwd)/../installation/OCE.framework/Versions/0.18/Resources; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCE_INSTALL_DIR=$(pwd)/../installation/lib/oce-0.18/; fi
-    
-    # configuring OCE via cmake
-    - cmake .. -DCMAKE_BUILD_TYPE=Release -DOCE_BUILD_SHARED_LIB=OFF -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DOCE_INSTALL_PREFIX="$(pwd)/../installation" -DFREETYPE_INCLUDE_DIR_freetype2=$OUR_DIR/freetype-2.7.1/installation/include/freetype2/freetype/config -DFREETYPE_INCLUDE_DIR_ft2build=$OUR_DIR/freetype-2.7.1/installation/include/freetype2 -DFREETYPE_LIBRARY_RELEASE=$OUR_DIR/freetype-2.7.1/installation/lib/libfreetype.a 
-    
-    # now we build OCE
-    # -> On macOS we use a timeout to prevent travis from terminating our build job
-    #    without saving the ccache and OCE directories. We rerun the job until OCE
-    #    is fully built. The output will indicate that by showing 
-    #       ">> skipping build until ccache and compilation of oce works. restart task or schedule new task."
-    #    TODO: is there a workaround for build jobs that take longer than 50 minutes?
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then timeout -s SIGTERM $TIMEOUT_BUILD make -j4 install > install_out.txt || export BUILD_SUCCESS=false ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then travis_wait 30 make -j8 && make install > install_out.txt || export BUILD_SUCCESS=false; fi
-    # show last 30 lines of install output
-    - tail -n 30 install_out.txt
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export OCE_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/cmake/opencascade; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCE_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/cmake/opencascade; fi
     
     
     # finally build and test occ-csg
