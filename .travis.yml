@@ -47,9 +47,9 @@ script:
     
     # downloading occ
     - mkdir -p dependencies
-    - if [ "$TRAVIS_OS_NAME" == "linux" ] wget https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-linux-x64.zip
+    - if [ "$TRAVIS_OS_NAME" == "linux" ] curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-linux-x64.zip -LO
     - if [ "$TRAVIS_OS_NAME" == "linux" ] tar xvzf dependencies/opencascade-$OCC_VERSION-linux-x64.zip
-    - if [ "$TRAVIS_OS_NAME" == "osx" ] wget https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-macos.zip
+    - if [ "$TRAVIS_OS_NAME" == "osx" ] curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-macos.zip -LO
     - if [ "$TRAVIS_OS_NAME" == "osx" ] tar xvzf dependencies/opencascade-$OCC_VERSION-macos-x64.zip
     
     # setting OCE install dir
