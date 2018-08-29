@@ -58,7 +58,7 @@ script:
     
     # setting OCC install dir
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export OCC_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/cmake/opencascade; mv $OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/libfreetype.a.6 $OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/libfreetype.a ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCC_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/cmake/opencascade; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCC_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/cmake/opencascade; mv $OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/libfreetype.a.6 $OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/libfreetype.a ; fi
     
     
     # finally build and test occ-csg
