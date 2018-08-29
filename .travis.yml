@@ -19,9 +19,9 @@ matrix:
       osx_image: xcode9.2
       install: true
 
-cache:
-  ccache: true
-  directories:
+#cache:
+  #ccache: true
+  #directories:
    #- $HOME/Library/Caches/Homebrew
    # TODO: how can we do conditional caching of directories (depending on OS)
    #- /home/travis/build/miho/OCC-CSG/oce-OCE-0.18.3
@@ -49,9 +49,9 @@ script:
     - mkdir -p dependencies
     - cd dependencies
     - if [ "$TRAVIS_OS_NAME" == "linux" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-linux-x64.zip -LO ; fi
-    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then tar xvzf dependencies/opencascade-$OCC_VERSION-linux-x64.zip ; fi
+    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then tar xvzf opencascade-$OCC_VERSION-linux-x64.zip ; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-macos.zip -LO ; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then tar xvzf dependencies/opencascade-$OCC_VERSION-macos-x64.zip ; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then tar xvzf opencascade-$OCC_VERSION-macos-x64.zip ; fi
     
     - cd $OUR_DIR
     
