@@ -1,6 +1,6 @@
-IF(LINUX)
+IF(UNIX)
   set(OS_SPECIFIC "pthread")
-ENDIF(LINUX)  
+ENDIF(UNIX)  
 
 CreateExecutable(occ-csg.cpp
 
