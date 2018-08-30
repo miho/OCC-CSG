@@ -1,3 +1,7 @@
+	IF(LINUX)
+	  set(OS_SPECIFIC "pthread")
+	ENDIF(LINUX)  
+
 CreateExecutable(occ-csg.cpp
 
 #${OpenCASCADE_LIBRARIES}
@@ -53,7 +57,7 @@ TKernel
 
 freetype
 
-#pthread
+${OS_SPECIFIC}
 
 )
 
