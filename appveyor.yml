@@ -29,9 +29,8 @@ environment:
 matrix:
   fast_finish: true
 
-cache:
-  - C:\projects\occ-csg\freetype-2.7.1\
-  - C:\projects\occ-csg\oce\
+#cache:
+#  - C:\projects\occ-csg\
 
 install:
   - vswhere -property installationPath
@@ -56,34 +55,11 @@ install:
   
   - echo %VS150COMNTOOLS%
      
-  # install FreeType 2.7.1
-  - curl -LfsS -o freetype-2.7.1.tar.gz https://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz
-  - cmd.exe '/C 7z x "freetype-2.7.1.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1 -y > nul
-  - cd %APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1
-  - dir
-  - if not exist build mkdir build
-  - if not exist installation mkdir installation
-  - cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\
-  - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
   
-  # install OCE 0.18.3 
-  #- curl -LfsS -o OCE-0.18.3.tar.gz https://github.com/miho/oce/archive/OCE-0.18.3.tar.gz
-  #- cmd.exe '/C 7z x "OCE-0.18.3.tar.gz" -so | 7z x -aoa -si -ttar -o%APPVEYOR_BUILD_FOLDER%\OCE-0.18.3 -y > nul
-  - cd %APPVEYOR_BUILD_FOLDER%\
-  - if not exist oce git clone --branch OCE-0.18.3 --depth 1 https://github.com/tpaviot/oce.git oce
-  #- git clone https://github.com/tpaviot/oce.git oce
-  #- cd %APPVEYOR_BUILD_FOLDER%\
-  - dir
-  - cd %APPVEYOR_BUILD_FOLDER%\oce
-  #- git checkout OCE-0.18.3
-  - dir
-  - if not exist build mkdir build
-  - if not exist installation mkdir installation
-  - cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64" -DOCE_BUILD_SHARED_LIB=OFF -DCMAKE_BUILD_TYPE=Release -DOCE_USE_TCL_TEST_FRAMEWORK=OFF -DOCE_TESTING=OFF -DOCE_DRAW=OFF -DOCE_VISUALISATION=ON -DOCE_OCAF=ON -DOCE_DATAEXCHANGE=ON -DOCE_COPY_HEADERS_BUILD=ON -DOCE_MULTITHREAD_LIBRARY=OPENMP -DFREETYPE_INCLUDE_DIR_freetype2=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\include\freetype2\freetype\config -DFREETYPE_INCLUDE_DIR_ft2build=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\include\freetype2 -DFREETYPE_LIBRARY_RELEASE=%APPVEYOR_BUILD_FOLDER%\freetype-2.7.1\freetype-2.7.1\installation\lib\freetype.lib -DOCE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\oce\installation\"
-  - MSBuild .\OCE.sln  /property:Configuration=Release /property:Platform=x64
-  - MSBuild .\INSTALL.vcxproj  /property:Configuration=Release /property:Platform=x64
+  # download OCC
+  - curl -LfsS -o opencascade-v7.3.0.2-windows-x64.zip https://github.com/miho/occ-for-occ-csg/releases/download/v7.3.0.2/opencascade-v7.3.0.2-windows-x64.zip
+  - cmd.exe '/C 7z x "opencascade-v7.3.0.2-windows-x64.zip" -o%APPVEYOR_BUILD_FOLDER%\opencascade-v7.3.0.2-windows-x64 -y > nul
+
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
   #- dir
@@ -92,8 +68,7 @@ build_script:
   - if not exist build mkdir build
   - cd build
   # generate build script
-  - dir %APPVEYOR_BUILD_FOLDER%\oce\installation\
-  - cmake .. -G "%generator%" -DOCE_DIR=%APPVEYOR_BUILD_FOLDER%\oce\installation\cmake
+  - cmake .. -G "%generator%" -DOpenCASCADE_DIR=%APPVEYOR_BUILD_FOLDER%\opencascade-v7.3.0.2-windows-x64\cmake
   - MSBuild .\occ-csg-prj.sln  /property:Configuration=Release /property:Platform=x64
   - bin\Release\occ-csg.exe --help
 
