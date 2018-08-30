@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/miho/OCC-CSG.svg?branch=master)](https://travis-ci.org/miho/OCC-CSG) [![Build status](https://ci.appveyor.com/api/projects/status/k4lxqsej71ughs48?svg=true)](https://ci.appveyor.com/project/miho/occ-csg)
 
 
-Simple but powerful CSG tool based on the OpenCascade CAD Kernel ([OCE](https://github.com/tpaviot/oce) edition)
+Simple but powerful CSG tool based on the [OpenCascade](https://www.opencascade.com/content/overview) CAD Kernel
 
 This tool provides a simple command-line interface for applying boolean operations and transformations to 3D objects specified in either BREP/STEP or STL format. It contains a convenient STL importer for converting mesh based geometries to an eqivalent BREP representation (might cause performance issues for large STL files). Geometries can be exported as STL files as well.
 
