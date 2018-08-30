@@ -9,26 +9,35 @@ INCLUDE(cmake/CreateLibrary.cmake)
 
 # Find opencascade libraries
 
-FIND_PACKAGE(OCE REQUIRED)
-INCLUDE_DIRECTORIES(${OCE_INCLUDE_DIRS})
+find_package(OpenCASCADE COMPONENTS FoundationClasses REQUIRED)
+find_package(OpenCASCADE COMPONENTS ModelingAlgorithms REQUIRED)
+find_package(OpenCASCADE COMPONENTS ModelingData REQUIRED)
+find_package(OpenCASCADE COMPONENTS DataExchange REQUIRED)
+find_package(OpenCASCADE COMPONENTS Visualization REQUIRED)
+include_directories(${OpenCASCADE_INCLUDE_DIR})
+MESSAGE("OCC-Include-Dir: ${OpenCASCADE_INCLUDE_DIR}")
+link_directories(${OpenCASCADE_LIBRARY_DIR})
+MESSAGE("OCC-Lib-Dir-Dir: ${OpenCASCADE_LIBRARY_DIR}")
+
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/freetype/include")
+#include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/freetype/include")
 
 # Find openmp libraries
 
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
+#find_package(OpenMP)
+#if (OPENMP_FOUND)
+#    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+#    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+#endif()
 
 # Find freetype libraries
 
 #find_package(Freetype REQUIRED)
 #include_directories(${FREETYPE_INCLUDE_DIRS})
+#link_directories(${FREETYPE_LIBRARY_DIR})
 
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...

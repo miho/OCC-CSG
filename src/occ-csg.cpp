@@ -62,8 +62,9 @@
 
 // STL import
 #include <RWStl.hxx>
-#include <StlMesh_Mesh.hxx>
-#include <StlMesh_MeshExplorer.hxx>
+#include <Poly_Triangulation.hxx>
+//#include <StlMesh_Mesh.hxx>
+//#include <StlMesh_MeshExplorer.hxx>
 
 // relevant for importing stl files
 #include <OSD_Path.hxx>
@@ -88,9 +89,7 @@
 #include <TopExp_Explorer.hxx>
 
 // fonts & text
-#include <Font_BRepFont.hxx>
-
-// TODO we have to upgrade to occt-7.2.x before using this class :(
+//#include <Font_BRepFont.hxx>
 //#include <Font_BRepTextBuilder.hxx>
 
 // transform
@@ -105,12 +104,13 @@
 // math (OCCT/OCE compliant)
 #include <math.hxx>
 
-
 #define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
 
+
+
 // version
-#define VERSION "0.9.1"
+#define VERSION "0.9.2"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -127,6 +127,8 @@ TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
+
+
 void roundEdges(int argc, char* argv[]);
 void splitShape(int argc, char *argv[]);
 
@@ -223,31 +225,31 @@ TopoDS_Shape importSTL( std::string const &file )
 
 	std::cout << " -> reading '" << file << "'" << std::endl;
 
-    Handle(StlMesh_Mesh) aSTLMesh = RWStl::ReadFile(aFile);
+    Handle(Poly_Triangulation) aSTLMesh = RWStl::ReadFile(aFile);
 
-    Standard_Integer NumberDomains = aSTLMesh->NbDomains();
-    
-    gp_XYZ p1, p2, p3;
+    Standard_Integer numberOfTriangles = aSTLMesh->NbTriangles();
+
     TopoDS_Vertex Vertex1, Vertex2, Vertex3;
 	TopoDS_Shape shape;
     TopoDS_Face face;
     TopoDS_Wire wire;
-    Standard_Real x1, y1, z1;
-    Standard_Real x2, y2, z2;
-    Standard_Real x3, y3, z3;
-
-    StlMesh_MeshExplorer aMExp (aSTLMesh);
 
 	std::cout << " -> converting to faces" << std::endl;
 
-    for (Standard_Integer iND=1;iND<=NumberDomains;iND++)
-    {
-	for (aMExp.InitTriangle (iND); aMExp.MoreTriangle (); aMExp.NextTriangle ())
+
+	for (Standard_Integer i = 1; i <= numberOfTriangles; i++)
 	{
-	    aMExp.TriangleVertices (x1,y1,z1,x2,y2,z2,x3,y3,z3);
-	    p1.SetCoord(x1,y1,z1);
-	    p2.SetCoord(x2,y2,z2);
-	    p3.SetCoord(x3,y3,z3);
+	    Poly_Triangle triangle = aSTLMesh->Triangle(i);
+
+	    Standard_Integer n1;
+	    Standard_Integer n2;
+	    Standard_Integer n3;
+
+	    triangle.Get(n1, n2, n3);
+
+	    gp_Pnt p1 = aSTLMesh->Node(n1);
+	    gp_Pnt p2 = aSTLMesh->Node(n2);
+	    gp_Pnt p3 = aSTLMesh->Node(n3);
 
 	    if (!p1.IsEqual(p2,0.0) && !p1.IsEqual(p3,0.0))
 	    {
@@ -263,9 +265,8 @@ TopoDS_Shape importSTL( std::string const &file )
 						shapeSewer.Add(face);
 					}
 				}
-			}
-		}
-    }
+	    }
+	}
 
 	std::cout << " -> sewing faces" << std::endl;
 
@@ -1346,17 +1347,24 @@ TopoDS_Shape createText2d(std::string const &font, double fSize, double x, doubl
 		unsupportedFormat(font);
 	}
 
-	Font_BRepFont fontObj(font.c_str(), fSize);
-	TopoDS_Shape shape = fontObj.RenderText(text.c_str());
+    error("requested functionality not implemented due to changes in the OCCT API. See https://github.com/miho/OCC-CSG/issues/4 for updates.");
 
-	gp_Trsf transformation;
-	transformation.SetTranslation(gp_Vec(x, y, 0));
-	shape = BRepBuilderAPI_GTransform(shape, transformation);
+    TopoDS_Shape textShape;
 
-	return shape;
+    return textShape;
 
-	//Font_BRepTextBuilder textBuilder;
-    //TopoDS_Shape textShape = textBuilder.Perform(font, NCollection_String(text));
+    // Font_BRepFont fontObj(font.c_str(), fSize);
+    // TopoDS_Shape shape = fontObj.RenderText(text.c_str());
+
+	// gp_Trsf transformation;
+	// transformation.SetTranslation(gp_Vec(x, y, 0));
+	// shape = BRepBuilderAPI_GTransform(shape, transformation);
+
+	// return shape;
+
+	// Font_BRepTextBuilder textBuilder;
+    // Font_BRepFont fontObj(font.c_str(), fSize);
+    // TopoDS_Shape textShape = textBuilder.Perform(fontObj, NCollection_String(text.c_str()));
 }
 
 TopoDS_Shape transform(TopoDS_Shape const &shape, double transform_matrix[12]) {
@@ -1564,7 +1572,7 @@ void usage() {
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
-	std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
+	//std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
 	std::cerr << "" << std::endl;
