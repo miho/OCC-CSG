@@ -1347,11 +1347,11 @@ TopoDS_Shape createText2d(std::string const &font, double fSize, double x, doubl
 		unsupportedFormat(font);
 	}
 
-    error("requested functionality not implemented due to changes in the OCCT API. See https://github.com/miho/OCC-CSG/issues/4 for updates.");
+    // error("requested functionality not implemented due to changes in the OCCT API. See https://github.com/miho/OCC-CSG/issues/4 for updates.");
 
-    TopoDS_Shape textShape;
+    // TopoDS_Shape textShape;
 
-    return textShape;
+    // return textShape;
 
     // Font_BRepFont fontObj(font.c_str(), fSize);
     // TopoDS_Shape shape = fontObj.RenderText(text.c_str());
@@ -1362,9 +1362,11 @@ TopoDS_Shape createText2d(std::string const &font, double fSize, double x, doubl
 
 	// return shape;
 
-	// Font_BRepTextBuilder textBuilder;
-    // Font_BRepFont fontObj(font.c_str(), fSize);
-    // TopoDS_Shape textShape = textBuilder.Perform(fontObj, NCollection_String(text.c_str()));
+    Font_BRepTextBuilder textBuilder;
+    Font_BRepFont fontObj(font.c_str(), fSize);
+    TopoDS_Shape textShape = textBuilder.Perform(fontObj, NCollection_String(text.c_str()));
+	
+    return textShape;
 }
 
 TopoDS_Shape transform(TopoDS_Shape const &shape, double transform_matrix[12]) {
