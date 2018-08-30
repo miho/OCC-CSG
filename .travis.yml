@@ -49,8 +49,8 @@ script:
     # downloading occ
     - mkdir -p dependencies
     - cd dependencies
-    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/test-rel2/opencascade-test-rel2-linux-x64.zip -LO ; fi
-    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then unzip opencascade-test-rel2-linux-x64.zip > /dev/null ; fi
+    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-linux-x64.zip -LO ; fi
+    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then unzip opencascade-$OCC_VERSION-linux-x64.zip > /dev/null ; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then curl https://github.com/miho/occ-for-occ-csg/releases/download/$OCC_VERSION/opencascade-$OCC_VERSION-macos.zip -LO ; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then unzip opencascade-$OCC_VERSION-macos.zip > /dev/null ; fi
     
@@ -58,7 +58,7 @@ script:
     
     # setting OCC install dir
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export OCC_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/cmake/opencascade; mv $OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/libfreetype.a.6 $OUR_DIR/dependencies/opencascade-$OCC_VERSION-macos/lib/libfreetype.a ; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCC_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-test-rel2-linux-x64/lib/cmake/opencascade; mv $OUR_DIR/dependencies/opencascade-test-rel2-linux-x64/lib/libfreetype.a.6 $OUR_DIR/dependencies/opencascade-test-rel2-linux-x64/lib/libfreetype.a ; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export OCC_INSTALL_DIR=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/cmake/opencascade; mv $OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/libfreetype.a.6 $OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/libfreetype.a ; fi
     
     
     # finally build and test occ-csg
