@@ -6,9 +6,6 @@ function(CreateExecutable EXECUTABLESOURCE)
 
 	add_executable(${EXECUTABLEBINARY} ${EXECUTABLESOURCE})
 	target_link_libraries(${EXECUTABLEBINARY} ${ARGN})
-	
-	IF(LINUX)
-	  target_link_libraries(${EXECUTABLEBINARY} "pthread")
-	ENDIF(LINUX)  
+
 
 endfunction(CreateExecutable)
