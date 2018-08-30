@@ -53,7 +53,7 @@ TKernel
 
 freetype
 
-pthread
+#pthread
 
 )
 
