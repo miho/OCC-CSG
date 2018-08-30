@@ -51,6 +51,8 @@ TKG2d
 TKMath
 TKernel
 
+freetype
+
 pthread
 
 )
