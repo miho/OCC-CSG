@@ -52,6 +52,10 @@
 #include <STEPControl_Writer.hxx>
 #include <GProp_GProps.hxx>
 
+// IGES import and export
+#include <IGESControl_Reader.hxx>
+#include <IGESControl_Writer.hxx>
+
 // BREP import and export
 #include <BRepTools.hxx>
 #include <BRep_Builder.hxx>
@@ -315,6 +319,11 @@ TopoDS_Shape load(std::string const &filename) {
     	Reader.ReadFile(filename.c_str());
     	Reader.TransferRoots();
     	shape = Reader.OneShape();
+	} else if(endsWith(toLower(filename), ".igs")) {
+		IGESControl_Reader Reader;
+		Reader.ReadFile(filename.c_str());
+		Reader.TransferRoots();
+		shape = Reader.OneShape();
 	} else if(endsWith(toLower(filename), ".brep")){
 		BRep_Builder b;
 		BRepTools::Read(shape, filename.c_str(), b);
@@ -341,6 +350,13 @@ bool save(std::string const &filename, TopoDS_Shape shape, double stlTOL) {
 		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
 		STEPControl_Writer writer;
 		writer.Transfer(shape,STEPControl_AsIs);
+		writer.Write(filename.c_str());
+	} else if(endsWith(toLower(filename), ".igs")) {
+		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
+		int aBrepMode = 0;
+		IGESControl_Writer writer;
+		writer.AddShape(shape);
+		writer.ComputeModel();
 		writer.Write(filename.c_str());
 	}  else if(endsWith(toLower(filename), ".brep")){
 		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
