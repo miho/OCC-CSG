@@ -89,8 +89,8 @@
 #include <TopExp_Explorer.hxx>
 
 // fonts & text
-//#include <Font_BRepFont.hxx>
-//#include <Font_BRepTextBuilder.hxx>
+#include <Font_BRepFont.hxx>
+#include <Font_BRepTextBuilder.hxx>
 
 // transform
 #include <BRepBuilderAPI_GTransform.hxx>
