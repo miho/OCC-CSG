@@ -780,10 +780,10 @@ void csg(int argc, char *argv[]) {
 
 	std::cout << "> applying csg operation" << std::endl;
 
+	double fuzzyValue = 0;
+
     if(argc >= 8) {
         fuzzyValue = parseDouble(argv[7], "fuzzyValue");
-    } else {
-        fuzzyValue = 0.0;
     }
 
 	if(strcmp(argv[2],"union")==0) {
