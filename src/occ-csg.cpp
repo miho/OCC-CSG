@@ -46,6 +46,9 @@
 #include <TopExp.hxx>
 #include <TopoDS.hxx>
 
+// shape healing/repair
+#include <ShapeFix_Shape.hxx>
+
 // STEP import and export
 #include <BRepGProp.hxx>
 #include <STEPControl_Reader.hxx>
@@ -360,6 +363,7 @@ bool save(std::string const &filename, TopoDS_Shape shape, double stlTOL) {
 		writer.Write(filename.c_str());
 	}  else if(endsWith(toLower(filename), ".brep")){
 		std::cout << " -> ignoring STL TOL (using resolution independent format): " << stlTOL << std::endl;
+
 		BRepTools::Write(shape, filename.c_str());
 	} else {
 		unsupportedFormat(filename);
@@ -780,7 +784,10 @@ void csg(int argc, char *argv[]) {
 
 	std::cout << "> applying csg operation" << std::endl;
 
-	double fuzzyValue = 0;
+	// see the following links for new boolean features used below:
+	// https://www.opencascade.com/sites/default/files/documents/release_notes_7.3.0.pdf
+	// https://dev.opencascade.org/index.php?q=node/1056
+	double fuzzyValue = 0.0;
 
     if(argc >= 8) {
         fuzzyValue = parseDouble(argv[7], "fuzzyValue");
@@ -788,25 +795,32 @@ void csg(int argc, char *argv[]) {
 
 	if(strcmp(argv[2],"union")==0) {
 		BRepAlgoAPI_Fuse csg(s1, s2);
-		csg.SetUseOBB(false);
+		csg.SetUseOBB(true);
 		csg.SetRunParallel(false);
 		csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else if(strcmp(argv[2],"difference")==0) {
 		BRepAlgoAPI_Cut csg(s1, s2);
-        csg.SetUseOBB(false);
+        csg.SetUseOBB(true);
         csg.SetRunParallel(false);
         csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else if(strcmp(argv[2],"intersection")==0) {
 		BRepAlgoAPI_Common csg(s1, s2);
-        csg.SetUseOBB(false);
+        csg.SetUseOBB(true);
         csg.SetRunParallel(false);
         csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else {
         error("unknown command '" + std::string(argv[2]) + "'!");
 	}
+
+	// perform healing in case the boolean operations
+	// cause problems
+	ShapeFix_Shape FixShape;
+	FixShape.Init(res);
+	FixShape.Perform();
+	res = FixShape.Shape();
 
 	std::cout << " -> done." << std::endl;
 
