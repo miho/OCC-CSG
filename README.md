@@ -7,7 +7,7 @@ Simple but powerful CSG tool based on the [OpenCascade](https://www.opencascade.
 
 This tool provides a simple command-line interface for applying boolean operations and transformations to 3D objects specified in either BREP/STEP or STL format. It contains a convenient STL importer for converting mesh based geometries to an eqivalent BREP representation (might cause performance issues for large STL files). Geometries can be exported as STL files as well.
 
-There is a Java library [VCSG](https://github.com/miho/VCSG) and the corresponding [VRL-Studio plugin](https://github.com/miho/VRL-VCSG) for using OCC-CSG from Java and [VRL-Studio](https://vrl-studio.mihosoft.eu/)
+There is a Java library [VCSG](https://github.com/miho/VCSG) and the corresponding [VRL-Studio plugin](https://github.com/miho/VRL-VCSG) for using OCC-CSG from Java and [VRL-Studio](https://vrl-studio.mihosoft.eu/).
 
 ## Installation
 
