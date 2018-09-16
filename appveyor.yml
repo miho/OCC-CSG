@@ -57,9 +57,9 @@ install:
      
   
   # download OCC
-  - curl -LfsS -o opencascade-v7.3.0.2-windows-x64.zip https://github.com/miho/occ-for-occ-csg/releases/download/v7.3.0.2/opencascade-v7.3.0.2-windows-x64.zip
-  - cmd.exe '/C 7z x "opencascade-v7.3.0.2-windows-x64.zip" -o%APPVEYOR_BUILD_FOLDER%\ -y > nul
-  - dir %APPVEYOR_BUILD_FOLDER%\opencascade-v7.3.0.2-windows-x64
+  - curl -LfsS -o opencascade-v7.2.0.1-windows-x64.zip https://github.com/miho/occ-for-occ-csg/releases/download/v7.2.0.1/opencascade-v7.2.0.1-windows-x64.zip
+  - cmd.exe '/C 7z x "opencascade-v7.2.0.1-windows-x64.zip" -o%APPVEYOR_BUILD_FOLDER%\ -y > nul
+  - dir %APPVEYOR_BUILD_FOLDER%\opencascade-v7.2.0.1-windows-x64
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
   #- dir
@@ -68,7 +68,7 @@ build_script:
   - if not exist build mkdir build
   - cd build
   # generate build script
-  - cmake .. -G "%generator%" -DOpenCASCADE_DIR=%APPVEYOR_BUILD_FOLDER%\opencascade-v7.3.0.2-windows-x64\cmake
+  - cmake .. -G "%generator%" -DOpenCASCADE_DIR=%APPVEYOR_BUILD_FOLDER%\opencascade-v7.2.0.1-windows-x64\cmake
   - MSBuild .\occ-csg-prj.sln  /property:Configuration=Release /property:Platform=x64
   - bin\Release\occ-csg.exe --help
 
