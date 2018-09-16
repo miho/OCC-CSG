@@ -117,7 +117,7 @@
 
 
 // version
-#define VERSION "0.9.3"
+#define VERSION "0.9.4"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -791,25 +791,27 @@ void csg(int argc, char *argv[]) {
 
     if(argc >= 8) {
         fuzzyValue = parseDouble(argv[7], "fuzzyValue");
+
+		std::cout << "> WARNING: fuzzy value currently not supported" << std::endl;
     }
 
 	if(strcmp(argv[2],"union")==0) {
 		BRepAlgoAPI_Fuse csg(s1, s2);
-		csg.SetUseOBB(true);
-		csg.SetRunParallel(false);
-		csg.SetFuzzyValue(fuzzyValue);
+		// csg.SetUseOBB(true);
+		// csg.SetRunParallel(true);
+		// csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else if(strcmp(argv[2],"difference")==0) {
 		BRepAlgoAPI_Cut csg(s1, s2);
-        csg.SetUseOBB(true);
-        csg.SetRunParallel(false);
-        csg.SetFuzzyValue(fuzzyValue);
+        // csg.SetUseOBB(true);
+        // csg.SetRunParallel(true);
+        // csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else if(strcmp(argv[2],"intersection")==0) {
 		BRepAlgoAPI_Common csg(s1, s2);
-        csg.SetUseOBB(true);
-        csg.SetRunParallel(false);
-        csg.SetFuzzyValue(fuzzyValue);
+        // csg.SetUseOBB(true);
+        // csg.SetRunParallel(true);
+        // csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else {
         error("unknown command '" + std::string(argv[2]) + "'!");
