@@ -46,7 +46,6 @@ To get an overview over the CLI type `./occ-csg --help`:
 ------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                www.mihosoft.eu                 ------
 ------------------------------------------------------------
-> ERROR: wrong number of arguments!.
 
 USAGE:
 
