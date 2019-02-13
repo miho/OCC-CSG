@@ -30,8 +30,9 @@ matrix:
 
 env:
   global:
-    - OCC_VERSION="v7.2.0.1"
-    #- OCC_VERSION="v7.3.0.2"
+    - OCC_VERSION="occ-dev-2019-02-13"
+    #- OCC_VERSION="v7.2.0.1"
+    #not used anymore due to serious problems in - OCC_VERSION="v7.3.0.2"
     #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=/usr/lib/ccache:${PATH}; fi
     - TIMEOUT_BUILD='30m'
     - BUILD_SUCCESS=true
