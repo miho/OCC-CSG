@@ -202,12 +202,12 @@ int main(int argc, char *argv[])
 	
 	if(argc > 1 && strcmp(argv[1], "--version")==0) { version(); exit(0); }
 	
-	std::cout << "--------------------------------------------------------" << std::endl;
-    std::cout << "----      CSG Tool based on the OCE CAD Kernel      ----" << std::endl;
-	std::cout << "----                 Version " << VERSION << "                  ----" << std::endl;
+	std::cout << "-------------------------------------------------------------" << std::endl;
+    std::cout << "----        CSG Tool based on the OCE CAD Kernel         ----" << std::endl;
+	std::cout << "----                   Version " << VERSION << "                     ----" << std::endl;
 	std::cout << "---- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ----" << std::endl;
-	std::cout << "----                www.mihosoft.eu                 ----" << std::endl;
-	std::cout << "--------------------------------------------------------" << std::endl;
+	std::cout << "----                  www.mihosoft.eu                    ----" << std::endl;
+	std::cout << "-------------------------------------------------------------" << std::endl;
 
 	if(argc < 2) {
 		error("wrong number of arguments!.");
