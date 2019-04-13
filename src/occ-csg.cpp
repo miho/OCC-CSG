@@ -1142,7 +1142,7 @@ void chamferEdges(int argc, char* argv[]) {
 
     TopoDS_Shape shape = load(fileName);
 
-	TopExp_Explorer  faceExplorer(Box,TopAbs_FACE); 
+	TopExp_Explorer  faceExplorer(shape,TopAbs_FACE); 
     const  TopoDS_Face& face = TopoDS::Face(faceExplorer.Current()); 
     BRepFilletAPI_MakeFillet2d  fillet2d(face); 
     TopExp_Explorer  vertexExplorer(face, TopAbs_VERTEX); 
