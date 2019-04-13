@@ -106,7 +106,8 @@
 
 // shape editing
 #include <BRepFilletAPI_MakeFillet.hxx>
-#include <BRepFilletAPI_MakeFillet2d.hxx>
+// #include <BRepFilletAPI_MakeFillet2d.hxx>
+#include <BRepFilletAPI_MakeChamfer.hxx>
 
 
 // math (OCCT/OCE compliant)
@@ -1132,6 +1133,8 @@ void roundEdges(int argc, char* argv[]) {
 
 void chamferEdges(int argc, char* argv[]) {
 
+	std::cout << "WARNING: this method might not work properly. We need to test newer OCC versions." << std::endl;
+
     if(argc != 6 && argc != 7) {
         error("wrong number of arguments!");
     }
@@ -1143,17 +1146,21 @@ void chamferEdges(int argc, char* argv[]) {
 
     TopoDS_Shape shape = load(fileName);
 
-	TopExp_Explorer  faceExplorer(shape,TopAbs_FACE); 
-    const  TopoDS_Face& face = TopoDS::Face(faceExplorer.Current()); 
-    BRepFilletAPI_MakeFillet2d  fillet2d(face); 
-    TopExp_Explorer  vertexExplorer(face, TopAbs_VERTEX); 
-    while (vertexExplorer.More()) { 
-		fillet2d.AddFillet(TopoDS::Vertex(vertexExplorer.Current()),radius); 
-		vertexExplorer.Next(); 
-    } 
+	BRepFilletAPI_MakeChamfer chamfers(shape);
+	
+    TopTools_IndexedDataMapOfShapeListOfShape M;
+    TopExp::MapShapesAndAncestors(shape,TopAbs_EDGE,TopAbs_FACE,M);
+   
+    for (Standard_Integer i = 1; i < M.Extent(); i++ )
+    {
+        TopoDS_Edge E = TopoDS::Edge(TopoDS::Edge(M.FindKey(i)));
+        // TopoDS_Face F = TopoDS::Face(M.FindFromIndex(i).First());
+		TopoDS_Face F = TopoDS::Face(M.FindFromKey(E).First());
+        chamfers.Add(radius,E,F);
+    }
 	
     // create chamfers
-    TopoDS_Shape shapeOut= fillet2d.Shape(); 
+    TopoDS_Shape shapeOut= chamfers.Shape(); 
 
     double stlTOL;
 
