@@ -1023,6 +1023,8 @@ void editShape(int argc, char *argv[]) {
         splitShape(argc,argv);
     } else if(strcmp(argv[2],"round-edges")==0) {
         roundEdges(argc,argv);
+    } else if(strcmp(argv[2],"chamfer-edges")==0) {
+        chamferEdges(argc,argv);
     } else {
         error("unknown command '" + std::string(argv[2]) + "'!");
     }
