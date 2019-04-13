@@ -106,6 +106,7 @@
 
 // shape editing
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepFilletAPI_MakeFillet2d.hxx>
 
 
 // math (OCCT/OCE compliant)
@@ -117,7 +118,7 @@
 
 
 // version
-#define VERSION "0.9.4"
+#define VERSION "0.9.5"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -137,6 +138,8 @@ std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 
 
 void roundEdges(int argc, char* argv[]);
+void chamferEdges(int argc, char* argv[]);
+
 void splitShape(int argc, char *argv[]);
 
 void error(std::string const & msg);
@@ -198,12 +201,12 @@ int main(int argc, char *argv[])
 	
 	if(argc > 1 && strcmp(argv[1], "--version")==0) { version(); exit(0); }
 	
-	std::cout << "------------------------------------------------------------" << std::endl;
-    std::cout << "------      CSG Tool based on the OCE CAD Kernel      ------" << std::endl;
-	std::cout << "------                 Version " << VERSION << "                  ------" << std::endl;
-	std::cout << "------ 2018 by Michael Hoffer (info@michaelhoffer.de) ------" << std::endl;
-	std::cout << "------                www.mihosoft.eu                 ------" << std::endl;
-	std::cout << "------------------------------------------------------------" << std::endl;
+	std::cout << "--------------------------------------------------------" << std::endl;
+    std::cout << "----      CSG Tool based on the OCE CAD Kernel      ----" << std::endl;
+	std::cout << "----                 Version " << VERSION << "                  ----" << std::endl;
+	std::cout << "---- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ----" << std::endl;
+	std::cout << "----                www.mihosoft.eu                 ----" << std::endl;
+	std::cout << "--------------------------------------------------------" << std::endl;
 
 	if(argc < 2) {
 		error("wrong number of arguments!.");
@@ -1019,6 +1022,8 @@ void editShape(int argc, char *argv[]) {
         splitShape(argc,argv);
     } else if(strcmp(argv[2],"round-edges")==0) {
         roundEdges(argc,argv);
+    } else if(strcmp(argv[2],"chamfer-edges")==0) {
+        chamferEdges(argc,argv);
     } else {
         error("unknown command '" + std::string(argv[2]) + "'!");
     }
@@ -1123,6 +1128,42 @@ void roundEdges(int argc, char* argv[]) {
 
     save(outFileName, shapeOut, stlTOL);
 
+}
+
+void chamferEdges(int argc, char* argv[]) {
+
+    if(argc != 6 && argc != 7) {
+        error("wrong number of arguments!");
+    }
+
+    double radius = parseDouble(argv[3], "radius");
+
+    std::string fileName = argv[4];
+    std::string outFileName = toLower(argv[5]);
+
+    TopoDS_Shape shape = load(fileName);
+
+	TopExp_Explorer  faceExplorer(shape,TopAbs_FACE); 
+    const  TopoDS_Face& face = TopoDS::Face(faceExplorer.Current()); 
+    BRepFilletAPI_MakeFillet2d  fillet2d(face); 
+    TopExp_Explorer  vertexExplorer(face, TopAbs_VERTEX); 
+    while (vertexExplorer.More()) { 
+		fillet2d.AddFillet(TopoDS::Vertex(vertexExplorer.Current()),radius); 
+		vertexExplorer.Next(); 
+    } 
+	
+    // create chamfers
+    TopoDS_Shape shapeOut= fillet2d.Shape(); 
+
+    double stlTOL;
+
+    if(argc == 7) {
+        stlTOL = parseDouble(argv[6], "stlTOL");
+    } else {
+        stlTOL = 0.5;
+    }
+
+    save(outFileName, shapeOut, stlTOL);
 }
 
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -1621,7 +1662,7 @@ void usage() {
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
-	std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
+	//std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
 	std::cerr << "" << std::endl;
@@ -1646,6 +1687,8 @@ void usage() {
 	std::cerr << std::endl;
     std::cerr << " occ-csg --edit split-shape shape.stp stp" << std::endl;
     std::cerr << " occ-csg --edit round-edges radius shape.stp shape-rounded.stp" << std::endl;
+    std::cerr << " occ-csg --edit chamfer-edges radius shape.stp shape-chamfered.stp" << std::endl;
+	std::cerr << std::endl;
 	std::cerr << std::endl;
 	std::cerr << "Bounds:" << std::endl;
 	std::cerr << std::endl;
