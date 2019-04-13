@@ -1147,7 +1147,7 @@ void chamferEdges(int argc, char* argv[]) {
     BRepFilletAPI_MakeFillet2d  fillet2d(face); 
     TopExp_Explorer  vertexExplorer(face, TopAbs_VERTEX); 
     while (vertexExplorer.More()) { 
-		fillet2d.AddFillet(TopoDS::Vertex(vertexExplorer.Current()),r); 
+		fillet2d.AddFillet(TopoDS::Vertex(vertexExplorer.Current()),radius); 
 		vertexExplorer.Next(); 
     } 
 	
