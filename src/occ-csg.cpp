@@ -106,6 +106,7 @@
 
 // shape editing
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepFilletAPI_MakeFillet2d.hxx>
 
 
 // math (OCCT/OCE compliant)
@@ -138,6 +139,8 @@ std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 
 
 void roundEdges(int argc, char* argv[]);
+void chamferEdges(int argc, char* argv[]);
+
 void splitShape(int argc, char *argv[]);
 
 void error(std::string const & msg);
@@ -1126,6 +1129,42 @@ void roundEdges(int argc, char* argv[]) {
 
 }
 
+void chamferEdges(int argc, char* argv[]) {
+
+    if(argc != 6 && argc != 7) {
+        error("wrong number of arguments!");
+    }
+
+    double radius = parseDouble(argv[3], "radius");
+
+    std::string fileName = argv[4];
+    std::string outFileName = toLower(argv[5]);
+
+    TopoDS_Shape shape = load(fileName);
+
+	TopExp_Explorer  faceExplorer(Box,TopAbs_FACE); 
+    const  TopoDS_Face& face = TopoDS::Face(faceExplorer.Current()); 
+    BRepFilletAPI_MakeFillet2d  fillet2d(face); 
+    TopExp_Explorer  vertexExplorer(face, TopAbs_VERTEX); 
+    while (vertexExplorer.More()) { 
+		fillet2d.AddFillet(TopoDS::Vertex(vertexExplorer.Current()),r); 
+		vertexExplorer.Next(); 
+    } 
+	
+    // create chamfers
+    TopoDS_Shape shapeOut= fillet2d.Shape(); 
+
+    double stlTOL;
+
+    if(argc == 7) {
+        stlTOL = parseDouble(argv[6], "stlTOL");
+    } else {
+        stlTOL = 0.5;
+    }
+
+    save(outFileName, shapeOut, stlTOL);
+}
+
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2) {
 	gp_Pnt lowerLeftCornerOfBox(x1,y1,z1);
 	gp_Pnt upperRightCornerOfBox(x2,y2,z2);
@@ -1647,6 +1686,8 @@ void usage() {
 	std::cerr << std::endl;
     std::cerr << " occ-csg --edit split-shape shape.stp stp" << std::endl;
     std::cerr << " occ-csg --edit round-edges radius shape.stp shape-rounded.stp" << std::endl;
+    std::cerr << " occ-csg --edit chamfer-edges radius shape.stp shape-chamfered.stp" << std::endl;
+	std::cerr << std::endl;
 	std::cerr << std::endl;
 	std::cerr << "Bounds:" << std::endl;
 	std::cerr << std::endl;
