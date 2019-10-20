@@ -103,7 +103,7 @@ Bounds:
 
 - C+\+ Compiler with C+\+11 support (tested with Clang, GCC, MSVC+\+ 2017 on x64)
 - CMake >= 3.1
-- [OCC](https://github.com/miho/occ-for-occ-csg) >= 7.3.0.x
+- [OCC](https://github.com/miho/occ-for-occ-csg) >= 7.3.0.x (official version is currently built with 7.4.0)
 
 #### Hints for building OCC:
 

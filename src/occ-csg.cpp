@@ -83,7 +83,9 @@
 #include <TopoDS_Face.hxx>
 
 #include <Bnd_Box.hxx>
+
 #include <BRepBndLib.hxx>
+#include <BRepLib.hxx>
 
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
@@ -91,9 +93,19 @@
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 
+#include <BRepOffsetAPI_MakePipe.hxx>
+
 #include <gp_Circ.hxx>
 
+#include <Geom2d_TrimmedCurve.hxx>
+#include <Geom_CylindricalSurface.hxx>
+
+#include <GCE2d_MakeSegment.hxx>
+
+
 #include <TopExp_Explorer.hxx>
+
+
 
 // fonts & text
 #include <Font_BRepFont.hxx>
@@ -119,7 +131,7 @@
 
 
 // version
-#define VERSION "0.9.5"
+#define VERSION "0.9.6"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -128,6 +140,7 @@ TopoDS_Shape createCylinder(double r, double h);
 TopoDS_Shape createCylinder(double r, double h, double angle);
 TopoDS_Shape createCone(double r1, double r2, double h);
 TopoDS_Shape createCone(double r1, double r2, double h, double angle);
+TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, double num_revolutions);
 TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices);
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points);
 TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &filename);
@@ -203,10 +216,10 @@ int main(int argc, char *argv[])
 	if(argc > 1 && strcmp(argv[1], "--version")==0) { version(); exit(0); }
 	
 	std::cout << "-------------------------------------------------------------" << std::endl;
-    std::cout << "----        CSG Tool based on the OCE CAD Kernel         ----" << std::endl;
-	std::cout << "----                   Version " << VERSION << "                     ----" << std::endl;
+    std::cout << "----        CSG Tool based on the OCCT CAD Kernel        ----" << std::endl;
+	std::cout << "----                    Version " << VERSION << "                    ----" << std::endl;
 	std::cout << "---- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ----" << std::endl;
-	std::cout << "----                  www.mihosoft.eu                    ----" << std::endl;
+	std::cout << "----                   www.mihosoft.eu                   ----" << std::endl;
 	std::cout << "-------------------------------------------------------------" << std::endl;
 
 	if(argc < 2) {
@@ -758,6 +771,35 @@ void create(int argc, char *argv[]) {
 		}
 
 		save(filename,shape, stlTOL);
+	} else if(strcmp(argv[2],"helix")==0) {
+		if(argc != 5 && argc !=6) {
+            error("wrong number of arguments!");
+		}
+
+		std::vector<std::string> values = split(argv[3], ',');
+
+		if(values.size()!=4) {
+            error("wrong number of values!");
+		}
+
+		double radius = parseDouble(values[0].c_str(), "helix radius");
+		double profile_radius = parseDouble(values[1].c_str(), "profile radius");
+		double pitch = parseDouble(values[2].c_str(), "pitch");
+		double num_revolutions  = parseDouble(values[3].c_str(), "number of revolutions");
+
+		TopoDS_Shape shape = createHelix(radius, profile_radius, pitch, num_revolutions);
+
+		std::string filename = argv[4];
+
+		double stlTOL;
+
+		if(argc == 5) {
+			stlTOL = 0.5;
+		} else {
+			stlTOL = parseDouble(argv[5], "stlTOL");
+		}
+
+		save(filename,shape, stlTOL);
 	} else error("unknown command '" + std::string(argv[2]) + "'!");
 
 }
@@ -1210,6 +1252,39 @@ TopoDS_Shape createCone(double r1, double r2, double h, double angle) {
 	BRepPrimAPI_MakeCone coneMaker(r1,r2,h,angle);
 	TopoDS_Shape cone = coneMaker.Shape();
 	return cone;
+}
+
+TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, double num_revolutions)
+{
+    Standard_Real helixRadius = radius;
+    Standard_Real helixPitch = pitch;
+
+    gp_Lin2d lineSegmentWithPitch(gp_Pnt2d(0.0, 0.0), gp_Dir2d(helixRadius, helixPitch));
+    Handle(Geom2d_TrimmedCurve) curveSegment = GCE2d_MakeSegment(lineSegmentWithPitch, 0.0, M_PI * 2.0).Value();
+    Handle(Geom_CylindricalSurface) cylinderSurfaceForHelix = new Geom_CylindricalSurface(gp::XOY(), helixRadius);
+    TopoDS_Edge helixEdge = BRepBuilderAPI_MakeEdge(curveSegment, cylinderSurfaceForHelix, 0.0, num_revolutions * 2.0 * M_PI).Edge();
+
+    BRepLib::BuildCurve3d(helixEdge);
+
+    gp_Ax2 axisForProfileshape;
+    axisForProfileshape.SetDirection(gp_Dir(0.0, 1.0, 0));
+    axisForProfileshape.SetLocation(gp_Pnt(helixRadius, 0.0, 0.0));
+
+    gp_Circ profileGeometry(axisForProfileshape, profile_raius);
+
+    TopoDS_Edge profileEdge = BRepBuilderAPI_MakeEdge(profileGeometry).Edge();
+    TopoDS_Wire profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire();
+    TopoDS_Face profileFace = BRepBuilderAPI_MakeFace(profileWire).Face();
+    TopoDS_Wire helixWire = BRepBuilderAPI_MakeWire(helixEdge).Wire();
+
+    BRepOffsetAPI_MakePipe pipeMaker(helixWire, profileFace);
+
+    if (pipeMaker.IsDone())
+    {
+		return pipeMaker.Shape();
+    } else {
+		error("cannot create helix/pipe.");
+	}
 }
 
 TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices) {
@@ -1665,6 +1740,7 @@ void usage() {
 	std::cerr << " occ-csg --create sphere x1,y1,z1,r                                sphere.stp" << std::endl;
 	std::cerr << " occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp" << std::endl;
 	std::cerr << " occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp" << std::endl;
+	std::cerr << " occ-csg --create helix r,profile_r,pitch,num_revolutions          helix.stp" << std::endl;
 	std::cerr << " occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;

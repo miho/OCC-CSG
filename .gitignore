@@ -1,3 +1,7 @@
 .vscode
-build
+/build
+/build7
+/cmake-build-debug
+/cmake-build-release
+/installation
 .idea
