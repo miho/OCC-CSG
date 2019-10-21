@@ -33,9 +33,8 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 #    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 #endif()
 
-# Find freetype libraries
-
-IF(UNIX and NOT APPLE)
+# Find freetype libraries on Linux (don't know why the one provided by the static occt dep doesn't work on Linux)
+IF(UNIX AND NOT APPLE)
     find_package(Freetype REQUIRED)
     include_directories(${FREETYPE_INCLUDE_DIRS})
     link_directories(${FREETYPE_LIBRARY_DIR})
