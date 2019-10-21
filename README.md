@@ -121,7 +121,9 @@ For using `occ-csg` as independent command-line tool it is recommended to compil
     mkdir build && cd build
     cmake .. -DOpenCASCADE_DIR=/path/to/occ
     make -j4
-    
+
+On Linux, it might be necessary to install fontconfig-devel to successfully link the executable. On Ubuntu the precise package name is libfontconfig-dev.
+
 #### Windows (CMD)
 
     "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\vsdevcmd" -arch=x64
