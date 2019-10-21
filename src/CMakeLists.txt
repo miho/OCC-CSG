@@ -55,9 +55,8 @@ TKG2d
 TKMath
 TKernel
 
-freetype
-
 ${FreeType}
+${FontConfig}
 
 ${OS_SPECIFIC}
 
