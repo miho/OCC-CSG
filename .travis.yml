@@ -9,7 +9,7 @@ addons:
        - cmake
        - libglu1-mesa-dev
        - libgl1-mesa-dev 
-       - libfontconfig1-dev
+       - libfontconfig-dev
 
 matrix:
     include:
