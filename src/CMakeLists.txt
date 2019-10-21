@@ -55,14 +55,14 @@ TKG2d
 TKMath
 TKernel
 
-${FreeType}
+freetype
 
 ${OS_SPECIFIC}
 
 )
 
 IF(UNIX AND NOT APPLE)
-  target_link_libraries(occ-csg ${FontConfig})
+  target_link_libraries(occ-csg ${FontConfig} ${FreeType})
 ENDIF()  
 
 install (TARGETS occ-csg DESTINATION bin)
