@@ -62,7 +62,7 @@ ${OS_SPECIFIC}
 )
 
 IF(UNIX AND NOT APPLE)
-  link_target_libraries(occ-csg ${FontConfig})
+  target_link_libraries(occ-csg ${FontConfig})
 ENDIF()  
 
 install (TARGETS occ-csg DESTINATION bin)
