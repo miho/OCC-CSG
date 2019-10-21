@@ -61,10 +61,6 @@ ${OS_SPECIFIC}
 
 )
 
-IF(UNIX AND NOT APPLE)
-  link_directories(${FREETYPE_LIBRARY_DIR})
-ENDIF()
-
 install (TARGETS occ-csg DESTINATION bin)
 
 
