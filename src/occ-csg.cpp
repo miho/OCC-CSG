@@ -1177,42 +1177,44 @@ void chamferEdges(int argc, char* argv[]) {
 
 	std::cout << "WARNING: this method might not work properly. We need to test newer OCC versions." << std::endl;
 
-    if(argc != 6 && argc != 7) {
-        error("wrong number of arguments!");
-    }
+    notImplemented();
 
-    double radius = parseDouble(argv[3], "radius");
-
-    std::string fileName = argv[4];
-    std::string outFileName = toLower(argv[5]);
-
-    TopoDS_Shape shape = load(fileName);
-
-	BRepFilletAPI_MakeChamfer chamfers(shape);
-	
-    TopTools_IndexedDataMapOfShapeListOfShape M;
-    TopExp::MapShapesAndAncestors(shape,TopAbs_EDGE,TopAbs_FACE,M);
-   
-    for (Standard_Integer i = 1; i < M.Extent(); i++ )
-    {
-        TopoDS_Edge E = TopoDS::Edge(TopoDS::Edge(M.FindKey(i)));
-        // TopoDS_Face F = TopoDS::Face(M.FindFromIndex(i).First());
-		TopoDS_Face F = TopoDS::Face(M.FindFromKey(E).First());
-        chamfers.Add(radius,E,F);
-    }
-	
-    // create chamfers
-    TopoDS_Shape shapeOut= chamfers.Shape(); 
-
-    double stlTOL;
-
-    if(argc == 7) {
-        stlTOL = parseDouble(argv[6], "stlTOL");
-    } else {
-        stlTOL = 0.5;
-    }
-
-    save(outFileName, shapeOut, stlTOL);
+//    if(argc != 6 && argc != 7) {
+//        error("wrong number of arguments!");
+//    }
+//
+//    double radius = parseDouble(argv[3], "radius");
+//
+//    std::string fileName = argv[4];
+//    std::string outFileName = toLower(argv[5]);
+//
+//    TopoDS_Shape shape = load(fileName);
+//
+//	BRepFilletAPI_MakeChamfer chamfers(shape);
+//	
+//    TopTools_IndexedDataMapOfShapeListOfShape M;
+//    TopExp::MapShapesAndAncestors(shape,TopAbs_EDGE,TopAbs_FACE,M);
+//   
+//    for (Standard_Integer i = 1; i < M.Extent(); i++ )
+//    {
+//        TopoDS_Edge E = TopoDS::Edge(TopoDS::Edge(M.FindKey(i)));
+//        // TopoDS_Face F = TopoDS::Face(M.FindFromIndex(i).First());
+//		TopoDS_Face F = TopoDS::Face(M.FindFromKey(E).First());
+//        chamfers.Add(radius,E,F);
+//    }
+//	
+//    // create chamfers
+//    TopoDS_Shape shapeOut= chamfers.Shape(); 
+//
+//    double stlTOL;
+//
+//    if(argc == 7) {
+//        stlTOL = parseDouble(argv[6], "stlTOL");
+//    } else {
+//        stlTOL = 0.5;
+//    }
+//
+//    save(outFileName, shapeOut, stlTOL);
 }
 
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2) {
