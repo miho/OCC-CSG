@@ -57,6 +57,8 @@ TKernel
 
 freetype
 
+${FreeType}
+
 ${OS_SPECIFIC}
 
 )
