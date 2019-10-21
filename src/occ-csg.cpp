@@ -1256,15 +1256,24 @@ TopoDS_Shape createCone(double r1, double r2, double h, double angle) {
 	return cone;
 }
 
-TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, double num_revolutions)
+TopoDS_Shape createHelix(double radius, double profile_radius, double pitch, double num_revolutions)
 {
-    Standard_Real helixRadius = radius;
-    Standard_Real helixPitch = pitch;
+    double helixRadius = radius;
+    double helixPitch = pitch;
 
-    gp_Lin2d lineSegmentWithPitch(gp_Pnt2d(0.0, 0.0), gp_Dir2d(helixRadius, helixPitch));
-    Handle(Geom2d_TrimmedCurve) curveSegment = GCE2d_MakeSegment(lineSegmentWithPitch, 0.0, M_PI * 2.0).Value();
+	// important to compute slope and length with unit radius 1.0
+	// since we project on cylinder surface we get the correct radius automatically
+	double slope  = helixPitch/(2.0*M_PI);
+	// length is the arc/curve length. again, do this without the radius of the helix
+	double length = 2.0*M_PI*sqrt(1.0+slope*slope) * num_revolutions;
+
+	// lines origin is at 0,0. the direction vector is (1, slope)
+    gp_Lin2d lineSegmentWithPitch(gp_Pnt2d(0.0, 0.0), gp_Dir2d(1, slope));
+    Handle(Geom2d_TrimmedCurve) curveSegment = GCE2d_MakeSegment(lineSegmentWithPitch, 0.0, 2.0 * M_PI).Value();
     Handle(Geom_CylindricalSurface) cylinderSurfaceForHelix = new Geom_CylindricalSurface(gp::XOY(), helixRadius);
-    TopoDS_Edge helixEdge = BRepBuilderAPI_MakeEdge(curveSegment, cylinderSurfaceForHelix, 0.0, num_revolutions * 2.0 * M_PI).Edge();
+
+	// now, we compute the edge on the surface of the cylinder
+    TopoDS_Edge helixEdge = BRepBuilderAPI_MakeEdge(curveSegment, cylinderSurfaceForHelix, 0.0, length).Edge();
 
     BRepLib::BuildCurve3d(helixEdge);
 
@@ -1272,7 +1281,7 @@ TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, doub
     axisForProfileshape.SetDirection(gp_Dir(0.0, 1.0, 0));
     axisForProfileshape.SetLocation(gp_Pnt(helixRadius, 0.0, 0.0));
 
-    gp_Circ profileGeometry(axisForProfileshape, profile_raius);
+    gp_Circ profileGeometry(axisForProfileshape, profile_radius);
 
     TopoDS_Edge profileEdge = BRepBuilderAPI_MakeEdge(profileGeometry).Edge();
     TopoDS_Wire profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire();
@@ -1281,12 +1290,12 @@ TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, doub
 
     BRepOffsetAPI_MakePipe pipeMaker(helixWire, profileFace);
 
-    if (pipeMaker.IsDone())
+    if (!pipeMaker.IsDone())
     {
-		return pipeMaker.Shape();
-    } else {
 		error("cannot create helix/pipe.");
 	}
+
+	return pipeMaker.Shape();
 }
 
 TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices) {
