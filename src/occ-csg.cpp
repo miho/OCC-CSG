@@ -131,7 +131,7 @@
 
 
 // version
-#define VERSION "0.9.6"
+#define VERSION "0.9.7"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
