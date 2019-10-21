@@ -62,6 +62,7 @@ ${OS_SPECIFIC}
 )
 
 IF(UNIX AND NOT APPLE)
+  link_directories(${FREETYPE_LIBRARY_DIR})
   target_link_libraries(occ-csg dependencies/opencascade-$OCC_VERSION-linux-x64/lib/libfreetype.a)
 ENDIF()
 
