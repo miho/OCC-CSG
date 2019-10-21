@@ -34,11 +34,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 #endif()
 
 # Find freetype libraries on Linux (don't know why the one provided by the static occt dep doesn't work on Linux)
-IF(UNIX AND NOT APPLE)
-    find_package(Freetype REQUIRED)
-    include_directories(${FREETYPE_INCLUDE_DIRS})
-    link_directories(${FREETYPE_LIBRARY_DIR})
-ENDIF()
+#IF(UNIX AND NOT APPLE)
+#    find_package(Freetype REQUIRED)
+#    include_directories(${FREETYPE_INCLUDE_DIRS})
+#    link_directories(${FREETYPE_LIBRARY_DIR})
+#ENDIF()
 
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
