@@ -35,7 +35,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Find freetype libraries on Linux (don't know why the one provided by the static occt dep doesn't work on Linux)
 IF(UNIX AND NOT APPLE)
-    find_package(FreeType REQUIRED)
+    find_library(FreeType REQUIRED)
     include_directories(${FREETYPE_INCLUDE_DIRS})
     link_directories(${FREETYPE_LIBRARY_DIR})
 ENDIF()
