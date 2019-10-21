@@ -35,9 +35,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Find freetype libraries
 
-#find_package(Freetype REQUIRED)
-#include_directories(${FREETYPE_INCLUDE_DIRS})
-#link_directories(${FREETYPE_LIBRARY_DIR})
+IF(UNIX and NOT APPLE)
+    find_package(Freetype REQUIRED)
+    include_directories(${FREETYPE_INCLUDE_DIRS})
+    link_directories(${FREETYPE_LIBRARY_DIR})
+ENDIF()
 
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
