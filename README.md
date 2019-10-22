@@ -42,7 +42,7 @@ To get an overview over the CLI type `./occ-csg --help`:
 ```
 -----------------------------------------------------------------
 ------        CSG Tool based on the OCE CAD Kernel         ------
-------                   Version 0.9.6                     ------
+------                   Version 0.9.7                     ------
 ------ 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ------
 ------                  www.mihosoft.eu                    ------
 -----------------------------------------------------------------
