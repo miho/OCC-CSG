@@ -40,14 +40,15 @@ The number at the end specifies the tolerance for the STL triangulation. Smaller
 To get an overview over the CLI type `./occ-csg --help`:
 
 ```
------------------------------------------------------------------
-------        CSG Tool based on the OCE CAD Kernel         ------
-------                   Version 0.9.7                     ------
------- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ------
-------                  www.mihosoft.eu                    ------
------------------------------------------------------------------
+-------------------------------------------------------------
+----        CSG Tool based on the OCCT CAD Kernel        ----
+----                    Version 0.9.8                    ----
+---- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ----
+----                   www.mihosoft.eu                   ----
+-------------------------------------------------------------
+> ERROR: wrong number of arguments!
 
-USAGE:
+USAGE: 
 
 Help & Info:
 
@@ -61,11 +62,12 @@ Creating Primitives:
  occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp
  occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp
  occ-csg --create helix r,profile_r,pitch,num_revolutions          helix.stp
+ occ-csg --create helix r,profile_face.stp,pitch,num_revolutions   helix.stp
  occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp
  occ-csg --create 2d:circle x,y,r                                  2dcircle.stp
  occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp
  occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp
- occ-csg --create 2d:text font.ttf 12.0 x,y "text to render"       2dtext.stp
+ occ-csg --create 2d:round-rect x,y,width,height,corner_r          2drectangle.stp
  occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp
  occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp
 
@@ -76,9 +78,10 @@ Format Conversion:
 
 Geometric Transformation:
 
- occ-csg --transform matrix    t1,t2,t3,...,t12 file1.stp file1-transformed.stp
- occ-csg --transform translate x,y,z            file1.stp file1-translated.stp
- occ-csg --transform scale     sx,sy,sz         file1.stp file1-scaled.stp
+ occ-csg --transform translate x,y,z                               file1.stp file1-translated.stp
+ occ-csg --transform scale     sx,sy,sz                            file1.stp file1-scaled.stp
+ occ-csg --transform rot       dir_x,dir_y,dir_z,angle file1.stp   file1-rotated.stp
+ occ-csg --transform matrix    t1,t2,t3,...,t12 file1.stp          file1-transformed.stp
 
 Boolean Operators, Constructive Solid Geometry (CSG):
 
@@ -90,6 +93,8 @@ Shape Editing:
 
  occ-csg --edit split-shape shape.stp stp
  occ-csg --edit round-edges radius shape.stp shape-rounded.stp
+ occ-csg --edit chamfer-edges radius shape.stp shape-chamfered.stp
+
 
 Bounds:
 
