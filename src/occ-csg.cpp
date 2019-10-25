@@ -132,7 +132,7 @@
 
 
 // version
-#define VERSION "0.9.8"
+#define VERSION "0.9.9"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -172,8 +172,17 @@ void create(int argc, char *argv[]);
 void transform(int argc, char *argv[]);
 void convert(int argc, char *argv[]);
 void csg(int argc, char *argv[]);
+void info(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
 void editShape(int argc, char *argv[]);
+
+/**
+  * Computes and returns the volume of this CSG based on a triangle mesh that approximates the
+  * surface of this CSG.
+  * @param tol tolerance for the mesh approximation (double > 0, smaller values give more accurate results, default is 0.1)
+  * @return volume of this csg
+  */
+double computeVolume(TopoDS_Shape shape, double tol);
 
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
@@ -236,7 +245,7 @@ int main(int argc, char *argv[])
 	else if(strcmp(argv[1], "--transform")==0) transform(argc,argv);
 	else if(strcmp(argv[1], "--convert")==0) convert(argc,argv);
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
-	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
+	else if(strcmp(argv[1], "--info")==0) info(argc,argv);
 	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error("unknown command '" + std::string(argv[1]) + "'!");
@@ -332,7 +341,7 @@ TopoDS_Shape load(std::string const &filename) {
 	std::cout << " -> reading file '" << filename << "'" << std::endl;
 
 	if(!isAccessible(filename)) {
-		std::cerr << "ERROR: file '" << filename << "' cannot be accessed!" << std::endl;
+		std::cerr << " -> ERROR: file '" << filename << "' cannot be accessed!" << std::endl;
 		exit(1);
 	}
 
@@ -960,54 +969,74 @@ void csg(int argc, char *argv[]) {
 	save(argv[5], res, stlTOL);
 }
 
-void bounds(int argc, char *argv[]) {
-	if(argc < 3 || argc > 5) {
+void info(int argc, char *argv[]) {
+    if(strcmp(argv[2],"bounds")==0) {
+        bounds(argc, argv);
+    } if(strcmp(argv[2],"volume")==0) {
+        std::string filename = argv[3];
+
+        double tol = 0.1;
+
+        if(argc == 5) {
+            tol = parseDouble(argv[4], "approximation tolerance");
+        }
+
+        TopoDS_Shape shape = load(filename);
+        double volume = computeVolume(shape, tol);
+
+        std::cout << "> volume = " << volume << std::endl;
+    }
+}
+
+void bounds(int argc, char* argv[]) {
+
+    if(argc < 4 || argc > 6) {
         error("wrong number of arguments!");
-	}
+    }
 
-	TopoDS_Shape shape = load(argv[2]);
+    TopoDS_Shape shape = load(argv[3]);
 
-	std::cout << "> computing bounding box" << std::endl;
+    std::cout << "> computing bounding box" << std::endl;
 
-	std::cout << " -> approximating bounds" << std::endl;
+    std::cout << " -> approximating bounds" << std::endl;
 
     // compute bbox on geometric object
-	double xMin,yMin,zMin,xMax,yMax, zMax = 0;
-	Standard_Real aDeflection = 0.0001, deflection;
-	Bnd_Box box;
-	BRepBndLib::Add(shape, box);
-	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
-	deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
+    double xMin,yMin,zMin,xMax,yMax, zMax = 0;
+    Standard_Real aDeflection = 0.0001, deflection;
+    Bnd_Box box;
+    BRepBndLib::Add(shape, box);
+    box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
 
-	std::cout << " -> tessellating object" << std::endl;
-	// tessellation
-	BRepMesh_IncrementalMesh mesh(shape, deflection);
+    std::cout << " -> tessellating object" << std::endl;
+    // tessellation
+    BRepMesh_IncrementalMesh mesh(shape, deflection);
 
     std::cout << " -> computing bounds" << std::endl;
 
-	// compute bbox with tessellation
-	box.SetVoid();
-	BRepBndLib::Add(shape, box);
-	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    // compute bbox with tessellation
+    box.SetVoid();
+    BRepBndLib::Add(shape, box);
+    box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
 
-	std::cout << " -> done." << std::endl;
+    std::cout << " -> done." << std::endl;
 
-    if(argc == 3) {
-		std::cout << " -> bounds: " << xMin << ", " << yMin << ", " << zMin << ", " << xMax << ", " << yMax << ", " << zMax << std::endl;
-	} else {
+    if(argc == 4) {
+        std::cout << " -> bounds: " << xMin << ", " << yMin << ", " << zMin << ", " << xMax << ", " << yMax << ", " << zMax << std::endl;
+    } else {
 
-		double stlTOL;
+        double stlTOL;
 
-		if(argc == 5) {
-			stlTOL = parseDouble(argv[4], "stlTOL");
-		} else {
-			stlTOL = 0.5;
-		}
+        if(argc == 6) {
+            stlTOL = parseDouble(argv[5], "stlTOL");
+        } else {
+            stlTOL = 0.5;
+        }
 
-		TopoDS_Shape boundingBox = createBox(xMin,yMin,zMin,xMax,yMax,zMax);
-		save(argv[3], boundingBox, stlTOL);
+        TopoDS_Shape boundingBox = createBox(xMin,yMin,zMin,xMax,yMax,zMax);
+        save(argv[4], boundingBox, stlTOL);
 
-	}
+    }
 }
 
 // ./occ-csg --transform translate x,y,z         file1.stp file1-translated.stp
@@ -1784,6 +1813,65 @@ std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape) {
 	return result;
 }
 
+double computeVolume(TopoDS_Shape shape, double tol) {
+
+    std::cout << "> tesselating and writing as STL file (using TOL " << tol << ")" << std::endl;
+
+    std::string stlApprox = std::tmpnam(nullptr) + std::string("_vcsg.stl");
+
+    save(stlApprox, shape, tol);
+
+    std::cout << "> re-importing STL file" << std::endl;
+
+    TCollection_AsciiString aName( (Standard_CString)stlApprox.data() );
+    OSD_Path aFile(aName);
+
+    BRepBuilderAPI_Sewing shapeSewer;
+
+    std::cout << " -> reading '" << stlApprox << "'" << std::endl;
+
+    Handle(Poly_Triangulation) aSTLMesh = RWStl::ReadFile(aFile);
+
+    Standard_Integer numberOfTriangles = aSTLMesh->NbTriangles();
+
+    gp_Vec v1, v2, v3;
+
+    std::cout << " -> computing volume of tesselated approximation" << std::endl;
+
+    double sum = 0;
+
+    for (Standard_Integer i = 1; i <= numberOfTriangles; i++)
+    {
+        Poly_Triangle triangle = aSTLMesh->Triangle(i);
+
+        Standard_Integer n1;
+        Standard_Integer n2;
+        Standard_Integer n3;
+
+        triangle.Get(n1, n2, n3);
+
+        gp_Pnt p1 = aSTLMesh->Node(n1);
+        gp_Pnt p2 = aSTLMesh->Node(n2);
+        gp_Pnt p3 = aSTLMesh->Node(n3);
+
+        if (!p1.IsEqual(p2,0.0) && !p1.IsEqual(p3,0.0))
+        {
+            v1 = gp_Vec(p1.Coord());
+            v2 = gp_Vec(p2.Coord());
+            v3 = gp_Vec(p3.Coord());
+
+            sum+=v1.Dot(v2.Crossed(v3)) / 6.0;
+        }
+    } // end for
+
+    return sum;
+}
+
+
+
+
+
+
 bool isAccessible(std::string const &filename) {
     std::ifstream infile(filename.c_str());
     return infile.good();
@@ -2005,9 +2093,10 @@ void usage() {
     std::cerr << " occ-csg --edit chamfer-edges radius shape.stp shape-chamfered.stp" << std::endl;
 	std::cerr << std::endl;
 	std::cerr << std::endl;
-	std::cerr << "Bounds:" << std::endl;
+	std::cerr << "Shape Info:" << std::endl;
 	std::cerr << std::endl;
-	std::cerr << " occ-csg --bounds file.stp" << std::endl;
-	std::cerr << " occ-csg --bounds file.stp bounds.stp" << std::endl;
+	std::cerr << " occ-csg --info bounds file.stp      " << std::endl;
+	std::cerr << " occ-csg --info bounds file.stp      bounds.stp" << std::endl;
+	std::cerr << " occ-csg --info volume file.stp tol  " << std::endl;
 	std::cerr << std::endl;
 }
