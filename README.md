@@ -42,7 +42,7 @@ To get an overview over the CLI type `./occ-csg --help`:
 ```
 -------------------------------------------------------------
 ----        CSG Tool based on the OCCT CAD Kernel        ----
-----                    Version 0.9.8                    ----
+----                    Version 0.9.9                    ----
 ---- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ----
 ----                   www.mihosoft.eu                   ----
 -------------------------------------------------------------
@@ -96,10 +96,11 @@ Shape Editing:
  occ-csg --edit chamfer-edges radius shape.stp shape-chamfered.stp
 
 
-Bounds:
+Shape Info:
 
- occ-csg --bounds file.stp
- occ-csg --bounds file.stp bounds.stp
+ occ-csg --info bounds file.stp      
+ occ-csg --info bounds file.stp      bounds.stp
+ occ-csg --info volume file.stp tol
 ```
 
 ## How to build OCC-CSG
