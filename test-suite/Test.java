@@ -62,7 +62,7 @@ public class Test {
 
             return Math.abs(converted-expectedVolume) < compareTol;
 
-        }, "--info", "volume", fileName, ""+tol).
+        }, "--info", "volume", fileName, ""+tol).showOutputAnd().
           throwIfInvalid("Expected volume and compute volume differ! Expected: " + expectedVolume+".");
     }
 
@@ -99,14 +99,14 @@ public class Test {
 
             return Math.abs(converted-expectedVolume) < compareTol;
 
-        }, "--info", "volume", tmpDirName+"/vol.brep", ""+tol).
+        }, "--info", "volume", tmpDirName+"/vol.brep", ""+tol).showOutputAnd().
           throwIfInvalid("Expected volume and compute volume differ! Expected: " + expectedVolume+".");
     }
 
     static void checkVersion(String expectedVersion) {
         Result res = execute((out,err)->out.trim().endsWith(expectedVersion), "--version");
 
-        res.throwIfInvalid("Version does not match! Expected " + expectedVersion +".");
+        res.showOutputAnd().throwIfInvalid("Version does not match! Expected " + expectedVersion +".");
     }
 
     static Result execute(String... args) {
@@ -195,6 +195,16 @@ public class Test {
                  +"\n\nOutput:\n" + this.out
                  + "\n\nError-Output:\n"+this.err);
             }
+        }
+
+        void showOutput() {
+            System.err.println("> Output:\n  -------\n" + out);
+            System.err.println("> Error-Output:\n  -------------\n" + err);
+        }
+
+        Result showOutputAnd() {
+            showOutput();
+            return this;
         }
     }
 
