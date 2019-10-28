@@ -140,6 +140,7 @@ TopoDS_Shape createCylinder(double r, double h);
 TopoDS_Shape createCylinder(double r, double h, double angle);
 TopoDS_Shape createCone(double r1, double r2, double h);
 TopoDS_Shape createCone(double r1, double r2, double h, double angle);
+TopoDS_Shape createPrism(double x, double y, double z, int n, double r, double h);
 TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, double num_revolutions);
 TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices);
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points);
@@ -148,6 +149,7 @@ TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, do
 TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
+TopoDS_Shape createPrism2d(double x, double y, int n, double r);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 
 
@@ -522,7 +524,38 @@ void create(int argc, char *argv[]) {
 		}
 
 		save(filename,shape, stlTOL);
-	} else if(strcmp(argv[2],"extrusion:polygon")==0) {
+	} else if(strcmp(argv[2],"prism")==0) {
+        if(argc != 5 && argc !=6) {
+            error("wrong number of arguments!");
+        }
+
+        std::vector<std::string> values = split(argv[3], ',');
+
+        if(values.size()!=6) {
+            error("wrong number of arguments!");
+        }
+
+        double x  = parseDouble(values[0].c_str(), "center x");
+        double y  = parseDouble(values[1].c_str(), "center y");
+        double z  = parseDouble(values[2].c_str(), "center z");
+        int    n  = parseInt(   values[3].c_str(), "n");
+        double r  = parseDouble(values[4].c_str(), "r");
+        double h  = parseDouble(values[5].c_str(), "h");
+
+        TopoDS_Shape shape = createPrism(x,y,z,n,r,h);
+
+        std::string filename = argv[4];
+
+        double stlTOL;
+
+        if(argc == 5) {
+            stlTOL = 0.5;
+        } else {
+            stlTOL = parseDouble(argv[5], "stlTOL");
+        }
+
+        save(filename,shape, stlTOL);
+    } else if(strcmp(argv[2],"extrusion:polygon")==0) {
 
 		if(argc != 5 && argc !=6) {
             error("wrong number of arguments!");
@@ -651,7 +684,38 @@ void create(int argc, char *argv[]) {
 
 		save(filename,shape, stlTOL);
 
-	} else if(strcmp(argv[2],"2d:rect")==0) {
+	} else if(strcmp(argv[2],"2d:prism")==0) {
+
+        if(argc != 5 && argc !=6) {
+            error("wrong number of arguments!");
+        }
+
+        std::vector<std::string> values = split(argv[3], ',');
+
+        if(values.size()!=4) {
+            error("wrong number of values!");
+        }
+
+        double center_x = parseDouble(values[0], "center x");
+        double center_y = parseDouble(values[1], "center y");
+        int    n =        parseInt(   values[2], "n");
+        double r =        parseDouble(values[3], "radius");
+
+        TopoDS_Shape shape = createPrism2d(center_x, center_y, n, r);
+
+        std::string filename = argv[4];
+
+        double stlTOL;
+
+        if(argc == 5) {
+            stlTOL = 0.5;
+        } else {
+            stlTOL = parseDouble(argv[5], "stlTOL");
+        }
+
+        save(filename,shape, stlTOL);
+
+    } else if(strcmp(argv[2],"2d:rect")==0) {
 
 		if(argc != 5 && argc !=6) {
             error("wrong number of arguments!");
@@ -1385,6 +1449,42 @@ TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::
 
 }
 
+TopoDS_Shape createPrism2d(double center_x, double center_y, int n, double r) {
+
+    double anglePerStep = 2 * M_PI / n;
+
+    std::vector<double> vertices;
+
+    for (int i = 0; i < n; i++) {
+        double coord_x = center_x + r * sin(i * anglePerStep);
+        double coord_y = center_y + r * cos(i * anglePerStep);
+
+        vertices.push_back(coord_x);
+        vertices.push_back(coord_y);
+    }
+
+    return createPolygon2d(vertices);
+}
+
+TopoDS_Shape createPrism(double center_x, double center_y, double center_z, int n, double r, double h) {
+
+    double anglePerStep = 2 * M_PI / n;
+
+    std::vector<double> vertices;
+
+    for (int i = 0; i < n; i++) {
+        double coord_x = center_x + r * sin(i * anglePerStep);
+        double coord_y = center_y + r * cos(i * anglePerStep);
+        double coord_z = center_z - h / 2.0;
+
+        vertices.push_back(coord_x);
+        vertices.push_back(coord_y);
+        vertices.push_back(coord_z);
+    }
+
+    return extrudePolygon(0,0,h, vertices);
+}
+
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points) {
 
     if(points.size()%3!=0) {
@@ -1750,12 +1850,14 @@ void usage() {
 	std::cerr << " occ-csg --create box x1,y1,z1,x2,y2,z2                            box.stp" << std::endl;
 	std::cerr << " occ-csg --create sphere x1,y1,z1,r                                sphere.stp" << std::endl;
 	std::cerr << " occ-csg --create cyl x1,y1,z1,r,h                                 cyl.stp" << std::endl;
+    std::cerr << " occ-csg --create prism x,y,z,n,r,h                                prism.stp" << std::endl;
 	std::cerr << " occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp" << std::endl;
 	std::cerr << " occ-csg --create helix r,profile_r,pitch,num_revolutions          helix.stp" << std::endl;
 	std::cerr << " occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
+    std::cerr << " occ-csg --create 2d:prism x,y,n,r                                 2dprism.stp" << std::endl;
 	//std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
