@@ -15,10 +15,11 @@ matrix:
     include:
     - os: linux
       language: c++
+      jdk:  openjdk11
       install: true
     - os: osx
       language: c++
-      osx_image: xcode9.4
+      osx_image: xcode10.1
       install: true
 
 #cache:
@@ -70,6 +71,10 @@ script:
     - mkdir -p build && cd build
     - (! $BUILD_SUCCESS && echo ">> skipping build until ccache and compilation of oce works. restart task or schedule new task.") || cmake .. -DOpenCASCADE_DIR=$OCC_INSTALL_DIR -DFontConfig:FILEPATH=/usr/lib/x86_64-linux-gnu/libfontconfig.so -DFreeType:FILEPATH=$OUR_DIR/dependencies/opencascade-$OCC_VERSION-linux-x64/lib/libfreetype.a
     - (! $BUILD_SUCCESS && echo ">> skipping build until ccache and compilation of oce works. restart task or schedule new task.") || make && bin/occ-csg --help       
+
+    # test the functionality (by computing volumes of different objects)
+    - cd $OUR_DIR && cd test-suite
+    - java ./Test.java
 
 before_deploy:
     - cd $OUR_DIR

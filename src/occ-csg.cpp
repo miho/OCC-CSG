@@ -124,6 +124,7 @@
 
 // math (OCCT/OCE compliant)
 #include <math.hxx>
+#include <TopTools_Array1OfShape.hxx>
 
 #define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
@@ -131,7 +132,7 @@
 
 
 // version
-#define VERSION "0.9.7"
+#define VERSION "0.9.9.1"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -141,13 +142,15 @@ TopoDS_Shape createCylinder(double r, double h, double angle);
 TopoDS_Shape createCone(double r1, double r2, double h);
 TopoDS_Shape createCone(double r1, double r2, double h, double angle);
 TopoDS_Shape createPrism(double x, double y, double z, int n, double r, double h);
-TopoDS_Shape createHelix(double radius, double profile_raius, double pitch, double num_revolutions);
+TopoDS_Shape createHelix(double radius, double profile_radius, double pitch, double num_revolutions);
+TopoDS_Shape createHelix(double radius, TopoDS_Shape profile_face, double pitch, double num_revolutions);
 TopoDS_Shape createPolygons(std::vector<double> const &points, std::vector<std::vector<int>> const &indices);
 TopoDS_Shape extrudePolygon(double ex, double ey, double ez, std::vector<double> const &points);
 TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &filename);
 TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r);
 TopoDS_Shape createPolygon2d(std::vector<double>const &coords);
 TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
+TopoDS_Shape createRoundRect2d(double length, double height, double corner_radius);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 TopoDS_Shape createPrism2d(double x, double y, int n, double r);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
@@ -171,8 +174,17 @@ void create(int argc, char *argv[]);
 void transform(int argc, char *argv[]);
 void convert(int argc, char *argv[]);
 void csg(int argc, char *argv[]);
+void info(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
 void editShape(int argc, char *argv[]);
+
+/**
+  * Computes and returns the volume of this CSG based on a triangle mesh that approximates the
+  * surface of this CSG.
+  * @param tol tolerance for the mesh approximation (double > 0, smaller values give more accurate results, default is 0.1)
+  * @return volume of this csg
+  */
+double computeVolume(TopoDS_Shape shape, double tol);
 
 // minimal IO API
 TopoDS_Shape load(std::string const &filename);
@@ -202,10 +214,13 @@ enum NUMBER_CONVERSION_ERROR {
 
 // Java-style number conversion (with error checks)
 // (atof,ato,... are very buggy and mostly useless, remember to use strto*)
+
+bool isDouble(std::string const &str);
 double parseDouble(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR);
 double parseDouble(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR) > onError);
 double parseDouble(std::string const &str, std::string const & varName);
 //double parseDouble(std::string const &str);
+bool isInt(std::string const &str);
 int parseInt(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR);
 int parseInt(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR) > onError);
 int parseInt(std::string const &str, std::string const & varName);
@@ -219,20 +234,20 @@ int main(int argc, char *argv[])
 	
 	std::cout << "-------------------------------------------------------------" << std::endl;
     std::cout << "----        CSG Tool based on the OCCT CAD Kernel        ----" << std::endl;
-	std::cout << "----                    Version " << VERSION << "                    ----" << std::endl;
+	std::cout << "----                   Version " << VERSION << "                   ----" << std::endl;
 	std::cout << "---- 2018-2019 by Michael Hoffer (info@michaelhoffer.de) ----" << std::endl;
 	std::cout << "----                   www.mihosoft.eu                   ----" << std::endl;
 	std::cout << "-------------------------------------------------------------" << std::endl;
 
 	if(argc < 2) {
-		error("wrong number of arguments!.");
+		error("wrong number of arguments!");
 	}
 
 	if(strcmp(argv[1], "--create")==0) create(argc,argv);
 	else if(strcmp(argv[1], "--transform")==0) transform(argc,argv);
 	else if(strcmp(argv[1], "--convert")==0) convert(argc,argv);
 	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
-	else if(strcmp(argv[1], "--bounds")==0) bounds(argc,argv);
+	else if(strcmp(argv[1], "--info")==0) info(argc,argv);
 	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error("unknown command '" + std::string(argv[1]) + "'!");
@@ -328,7 +343,7 @@ TopoDS_Shape load(std::string const &filename) {
 	std::cout << " -> reading file '" << filename << "'" << std::endl;
 
 	if(!isAccessible(filename)) {
-		std::cerr << "ERROR: file '" << filename << "' cannot be accessed!" << std::endl;
+		std::cerr << " -> ERROR: file '" << filename << "' cannot be accessed!" << std::endl;
 		exit(1);
 	}
 
@@ -746,7 +761,43 @@ void create(int argc, char *argv[]) {
 
 		save(filename,shape, stlTOL);
 
-	} else if(strcmp(argv[2],"2d:text")==0) {
+	}  else if(strcmp(argv[2],"2d:round-rect")==0) {
+
+        if(argc != 5 && argc !=6) {
+            error("wrong number of arguments!");
+        }
+
+        std::vector<std::string> values = split(argv[3], ',');
+
+        if(values.size()!=5) {
+            error("wrong number of values!");
+        }
+
+        double x = parseDouble(values[0], "x");
+        double y = parseDouble(values[1], "y");
+        double w = parseDouble(values[2], "width");
+        double h = parseDouble(values[3], "height");
+        double corner_r = parseDouble(values[4], "corner_r");
+
+        TopoDS_Shape shape = createRoundRect2d(w,h,corner_r);
+
+        gp_Trsf transformation;
+        transformation.SetTranslation(gp_Vec(x, y, 0));
+        shape = BRepBuilderAPI_GTransform(shape, transformation);
+
+        std::string filename = argv[4];
+
+        double stlTOL;
+
+        if(argc == 5) {
+            stlTOL = 0.5;
+        } else {
+            stlTOL = parseDouble(argv[5], "stlTOL");
+        }
+
+        save(filename,shape, stlTOL);
+
+    } else if(strcmp(argv[2],"2d:text")==0) {
 
 		if(argc != 8 && argc !=9) {
             error("wrong number of arguments!");
@@ -846,12 +897,47 @@ void create(int argc, char *argv[]) {
             error("wrong number of values!");
 		}
 
-		double radius = parseDouble(values[0].c_str(), "helix radius");
-		double profile_radius = parseDouble(values[1].c_str(), "profile radius");
-		double pitch = parseDouble(values[2].c_str(), "pitch");
-		double num_revolutions  = parseDouble(values[3].c_str(), "number of revolutions");
+		TopoDS_Shape shape;
 
-		TopoDS_Shape shape = createHelix(radius, profile_radius, pitch, num_revolutions);
+		// create helix with circular profile face
+		if(isDouble(values[1].c_str())) {
+			double radius = parseDouble(values[0].c_str(), "helix radius");
+			double profile_radius = parseDouble(values[1].c_str(), "profile radius");
+			double pitch = parseDouble(values[2].c_str(), "pitch");
+			double num_revolutions  = parseDouble(values[3].c_str(), "number of revolutions");
+
+			shape = createHelix(radius, profile_radius, pitch, num_revolutions);
+		} else {
+			// create helix with custom profile face
+			double radius = parseDouble(values[0].c_str(), "helix radius");
+			std::string profile_face_filename = values[1];
+			double pitch = parseDouble(values[2].c_str(), "pitch");
+			double num_revolutions  = parseDouble(values[3].c_str(), "number of revolutions");
+
+			TopoDS_Shape profile_face = load(profile_face_filename);
+
+			gp_Trsf face_rot;
+
+            gp_Ax1 axisForProfileFace;
+            axisForProfileFace.SetDirection(gp_Dir(1.0, 0.0, 0));
+
+            double degrees = 90;
+            double radians = ( degrees * M_PI ) / 180.0 ;
+
+            face_rot.SetRotation(axisForProfileFace, radians);
+            BRepBuilderAPI_Transform rot(profile_face, face_rot);
+            profile_face = rot.Shape();
+
+            gp_Trsf face_translation;
+            face_translation.SetTranslation(gp_Vec(radius, 0, 0));
+
+            BRepBuilderAPI_Transform translate(profile_face, face_translation);
+            profile_face = translate.Shape();
+
+			shape = createHelix(radius, profile_face, pitch, num_revolutions);
+		}
+
+		
 
 		std::string filename = argv[4];
 
@@ -947,54 +1033,74 @@ void csg(int argc, char *argv[]) {
 	save(argv[5], res, stlTOL);
 }
 
-void bounds(int argc, char *argv[]) {
-	if(argc < 3 || argc > 5) {
+void info(int argc, char *argv[]) {
+    if(strcmp(argv[2],"bounds")==0) {
+        bounds(argc, argv);
+    } if(strcmp(argv[2],"volume")==0) {
+        std::string filename = argv[3];
+
+        double tol = 0.1;
+
+        if(argc == 5) {
+            tol = parseDouble(argv[4], "approximation tolerance");
+        }
+
+        TopoDS_Shape shape = load(filename);
+        double volume = computeVolume(shape, tol);
+
+        std::cout << "> volume = " << volume << std::endl;
+    }
+}
+
+void bounds(int argc, char* argv[]) {
+
+    if(argc < 4 || argc > 6) {
         error("wrong number of arguments!");
-	}
+    }
 
-	TopoDS_Shape shape = load(argv[2]);
+    TopoDS_Shape shape = load(argv[3]);
 
-	std::cout << "> computing bounding box" << std::endl;
+    std::cout << "> computing bounding box" << std::endl;
 
-	std::cout << " -> approximating bounds" << std::endl;
+    std::cout << " -> approximating bounds" << std::endl;
 
     // compute bbox on geometric object
-	double xMin,yMin,zMin,xMax,yMax, zMax = 0;
-	Standard_Real aDeflection = 0.0001, deflection;
-	Bnd_Box box;
-	BRepBndLib::Add(shape, box);
-	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
-	deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
+    double xMin,yMin,zMin,xMax,yMax, zMax = 0;
+    Standard_Real aDeflection = 0.0001, deflection;
+    Bnd_Box box;
+    BRepBndLib::Add(shape, box);
+    box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    deflection= MAX3( xMax-xMin , yMax-yMin , zMax-zMin)*aDeflection;
 
-	std::cout << " -> tessellating object" << std::endl;
-	// tessellation
-	BRepMesh_IncrementalMesh mesh(shape, deflection);
+    std::cout << " -> tessellating object" << std::endl;
+    // tessellation
+    BRepMesh_IncrementalMesh mesh(shape, deflection);
 
     std::cout << " -> computing bounds" << std::endl;
 
-	// compute bbox with tessellation
-	box.SetVoid();
-	BRepBndLib::Add(shape, box);
-	box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    // compute bbox with tessellation
+    box.SetVoid();
+    BRepBndLib::Add(shape, box);
+    box.Get(xMin, yMin, zMin, xMax, yMax, zMax);
 
-	std::cout << " -> done." << std::endl;
+    std::cout << " -> done." << std::endl;
 
-    if(argc == 3) {
-		std::cout << " -> bounds: " << xMin << ", " << yMin << ", " << zMin << ", " << xMax << ", " << yMax << ", " << zMax << std::endl;
-	} else {
+    if(argc == 4) {
+        std::cout << " -> bounds: " << xMin << ", " << yMin << ", " << zMin << ", " << xMax << ", " << yMax << ", " << zMax << std::endl;
+    } else {
 
-		double stlTOL;
+        double stlTOL;
 
-		if(argc == 5) {
-			stlTOL = parseDouble(argv[4], "stlTOL");
-		} else {
-			stlTOL = 0.5;
-		}
+        if(argc == 6) {
+            stlTOL = parseDouble(argv[5], "stlTOL");
+        } else {
+            stlTOL = 0.5;
+        }
 
-		TopoDS_Shape boundingBox = createBox(xMin,yMin,zMin,xMax,yMax,zMax);
-		save(argv[3], boundingBox, stlTOL);
+        TopoDS_Shape boundingBox = createBox(xMin,yMin,zMin,xMax,yMax,zMax);
+        save(argv[4], boundingBox, stlTOL);
 
-	}
+    }
 }
 
 // ./occ-csg --transform translate x,y,z         file1.stp file1-translated.stp
@@ -1065,7 +1171,31 @@ void transform(int argc, char *argv[]) {
 			shape = BRepBuilderAPI_GTransform(shape, gtMat);
 		}
 
-	} else if (strcmp(argv[2],"matrix")==0) {
+	} else if(strcmp(argv[2],"rot")==0) {
+        std::vector<std::string> values = split(argv[3], ',');
+
+        if(values.size()!=4) {
+            error("wrong number of values!");
+        }
+
+        double x = parseDouble(values[0], "dir_x");
+        double y = parseDouble(values[1], "dir_y");
+        double z = parseDouble(values[2], "dir_z");
+        double angle = parseDouble(values[3], "angle");
+
+        gp_Trsf face_rot;
+
+        gp_Ax1 axisForProfileFace;
+        axisForProfileFace.SetDirection(gp_Dir(x, y, z));
+
+        double degrees = angle;
+        double radians = ( degrees * M_PI ) / 180.0 ;
+
+        face_rot.SetRotation(axisForProfileFace, radians);
+        BRepBuilderAPI_Transform rot(shape, face_rot);
+        shape = rot.Shape();
+
+    } else if (strcmp(argv[2],"matrix")==0) {
 		std::vector<std::string> values = split(argv[3], ',');
 
 		if(values.size()!=12) {
@@ -1171,7 +1301,7 @@ void splitShape(int argc, char *argv[]) {
 	}
 
 	// remove file ending
-	size_t lastindex = fileName.find_last_of("."); 
+	size_t lastindex = fileName.find_last_of(".");
 	std::string fNameWithoutEnding = fileName.substr(0, lastindex); 
 
 	std::vector<TopoDS_Shape> faces = splitShape(shape);
@@ -1356,6 +1486,40 @@ TopoDS_Shape createHelix(double radius, double profile_radius, double pitch, dou
 
     if (!pipeMaker.IsDone())
     {
+		error("cannot create helix/pipe.");
+	}
+
+	return pipeMaker.Shape();
+}
+
+TopoDS_Shape createHelix(double radius, TopoDS_Shape profile_face, double pitch, double num_revolutions)
+{
+    double helixRadius = radius;
+    double helixPitch = pitch;
+
+	// important to compute slope and length with unit radius 1.0
+	// since we project on cylinder surface we get the correct radius automatically
+	double slope  = helixPitch/(2.0*M_PI);
+	// length is the arc/curve length. again, do this without the radius of the helix
+	double length = 2.0*M_PI*sqrt(1.0+slope*slope) * num_revolutions;
+
+	// lines origin is at 0,0. the direction vector is (1, slope)
+    gp_Lin2d lineSegmentWithPitch(gp_Pnt2d(0.0, 0.0), gp_Dir2d(1, slope));
+    Handle(Geom2d_TrimmedCurve) curveSegment = GCE2d_MakeSegment(lineSegmentWithPitch, 0.0, 2.0 * M_PI).Value();
+    Handle(Geom_CylindricalSurface) cylinderSurfaceForHelix = new Geom_CylindricalSurface(gp::XOY(), helixRadius);
+
+	// compute the edge on the surface of the cylinder
+    TopoDS_Edge helixEdge = BRepBuilderAPI_MakeEdge(curveSegment, cylinderSurfaceForHelix, 0.0, length).Edge();
+    BRepLib::BuildCurve3d(helixEdge);
+
+    // create a wire of the helix curve
+	TopoDS_Wire helixWire = BRepBuilderAPI_MakeWire(helixEdge).Wire();
+
+	// create the pipe (sweep a profile along the helix)
+	// - frenet guarantees correct orientation of profile
+    BRepOffsetAPI_MakePipe pipeMaker(helixWire, profile_face, GeomFill_IsFrenet);
+
+    if (!pipeMaker.IsDone()) {
 		error("cannot create helix/pipe.");
 	}
 
@@ -1668,6 +1832,76 @@ TopoDS_Shape transform(TopoDS_Shape const &shape, double transform_matrix[12]) {
 	return transform.ModifiedShape(shape);
 }
 
+// Use MakeArc method to make an edge and two vertices
+// see https://www.opencascade.com/doc/occt-7.4.0/overview/html/occt_user_guides__modeling_algos.html
+void MakeArc(Standard_Real x,Standard_Real y,
+Standard_Real R,
+Standard_Real ang,
+TopoDS_Shape& E,
+TopoDS_Shape& V1,
+TopoDS_Shape& V2) {
+    gp_Ax2 Origin = gp::XOY();
+    gp_Vec Offset(x, y, 0.);
+    Origin.Translate(Offset);
+    BRepBuilderAPI_MakeEdge
+    ME(gp_Circ(Origin,R),  ang, ang+M_PI/2);
+    E = ME;
+    V1 = ME.Vertex1();
+    V2 = ME.Vertex2();
+}
+
+// Use createRoundRect2d method to make a round rect
+// see https://www.opencascade.com/doc/occt-7.4.0/overview/html/occt_user_guides__modeling_algos.html
+TopoDS_Shape createRoundRect2d(
+        double width,
+        double height,
+        double corner_radius) {
+
+    TopTools_Array1OfShape theEdges(1,8);
+    TopTools_Array1OfShape theVertices(1,8);
+
+    Standard_Real x = width/2 - corner_radius;
+    Standard_Real y = height/2 - corner_radius;
+
+    MakeArc(x,-y,corner_radius,
+            3.*M_PI/2.,theEdges(2),
+            theVertices(2),
+            theVertices(3));
+
+    MakeArc(x,y,corner_radius,
+            0.,theEdges(4),
+            theVertices(4),
+            theVertices(5));
+
+    MakeArc(-x,y,corner_radius,M_PI/2.,
+            theEdges(6),
+            theVertices(6),
+            theVertices(7));
+
+    MakeArc(-x,-y,corner_radius,M_PI,
+            theEdges(8),
+            theVertices(8),
+            theVertices(1));
+
+    // Create the linear edges
+    for (Standard_Integer i = 1; i <= 7; i += 2) {
+        theEdges(i) = BRepBuilderAPI_MakeEdge
+        (TopoDS::Vertex(theVertices(i)),TopoDS::Vertex
+        (theVertices(i+1)));
+    }
+
+    // Create the wire using the BRepBuilderAPI_MakeWire
+    BRepBuilderAPI_MakeWire MW;
+    for (Standard_Integer i = 1; i <= 8; i++)
+    {
+        MW.Add(TopoDS::Edge(theEdges(i)));
+    }
+
+    TopoDS_Face face = BRepBuilderAPI_MakeFace(MW.Wire()).Face();
+
+    return face;
+}
+
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape) {
 	std::vector<TopoDS_Shape> result;
 	for (TopExp_Explorer fExpl(shape, TopAbs_FACE); fExpl.More(); fExpl.Next())
@@ -1678,6 +1912,65 @@ std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape) {
 	}
 	return result;
 }
+
+double computeVolume(TopoDS_Shape shape, double tol) {
+
+    std::cout << "> tesselating and writing as STL file (using TOL " << tol << ")" << std::endl;
+
+    std::string stlApprox = std::tmpnam(nullptr) + std::string("_vcsg.stl");
+
+    save(stlApprox, shape, tol);
+
+    std::cout << "> re-importing STL file" << std::endl;
+
+    TCollection_AsciiString aName( (Standard_CString)stlApprox.data() );
+    OSD_Path aFile(aName);
+
+    BRepBuilderAPI_Sewing shapeSewer;
+
+    std::cout << " -> reading '" << stlApprox << "'" << std::endl;
+
+    Handle(Poly_Triangulation) aSTLMesh = RWStl::ReadFile(aFile);
+
+    Standard_Integer numberOfTriangles = aSTLMesh->NbTriangles();
+
+    gp_Vec v1, v2, v3;
+
+    std::cout << " -> computing volume of tesselated approximation" << std::endl;
+
+    double sum = 0;
+
+    for (Standard_Integer i = 1; i <= numberOfTriangles; i++)
+    {
+        Poly_Triangle triangle = aSTLMesh->Triangle(i);
+
+        Standard_Integer n1;
+        Standard_Integer n2;
+        Standard_Integer n3;
+
+        triangle.Get(n1, n2, n3);
+
+        gp_Pnt p1 = aSTLMesh->Node(n1);
+        gp_Pnt p2 = aSTLMesh->Node(n2);
+        gp_Pnt p3 = aSTLMesh->Node(n3);
+
+        if (!p1.IsEqual(p2,0.0) && !p1.IsEqual(p3,0.0))
+        {
+            v1 = gp_Vec(p1.Coord());
+            v2 = gp_Vec(p2.Coord());
+            v3 = gp_Vec(p3.Coord());
+
+            sum+=v1.Dot(v2.Crossed(v3)) / 6.0;
+        }
+    } // end for
+
+    return sum;
+}
+
+
+
+
+
 
 bool isAccessible(std::string const &filename) {
     std::ifstream infile(filename.c_str());
@@ -1723,9 +2016,16 @@ std::vector<std::string> split(std::string const &str, const char sep) {
 //    });
 //}
 
+bool isDouble(std::string const &str) {
+	bool result = true;
+	parseDouble(str,[&result](NUMBER_CONVERSION_ERROR e)-> void {result=e==VALID;});
+	return result;
+}
+
 double parseDouble(std::string const &str, std::string const & varName) {
     return parseDouble(str, [varName](NUMBER_CONVERSION_ERROR e) -> void {
         std::cerr << "ERROR: cannot convert number '" << varName << "', error_code: " << e << std::endl;
+		exit(1);
     });
 }
 
@@ -1736,7 +2036,6 @@ double parseDouble(std::string const &str, std::function< void(NUMBER_CONVERSION
 
     if(ERR!=VALID) {
         onError(ERR);
-        exit(1);
     }
 
     return res;
@@ -1775,9 +2074,16 @@ double parseDouble(std::string const &str, NUMBER_CONVERSION_ERROR *ERROR) {
 //    return parseInt(str, [](NUMBER_CONVERSION_ERROR e) -> void {std::cerr << "ERROR: cannot convert number, error_code: " << e << std::endl;});
 //}
 
+bool isInt(std::string const &str) {
+	bool result = true;
+	parseInt(str,[&result](NUMBER_CONVERSION_ERROR e)-> void {result=e==VALID;});
+	return result;
+}
+
 int parseInt(std::string const &str, std::string const & varName) {
     return parseInt(str, [varName](NUMBER_CONVERSION_ERROR e) -> void {
         std::cerr << "ERROR: cannot convert number '" << varName << "', error_code: " << e << std::endl;
+		exit(1);
     });
 }
 
@@ -1788,7 +2094,6 @@ int parseInt(std::string const &str, std::function< void(NUMBER_CONVERSION_ERROR
 
 	if(ERR!=VALID) {
 		onError(ERR);
-		exit(1);
 	}
 
 	return res;
@@ -1853,11 +2158,13 @@ void usage() {
     std::cerr << " occ-csg --create prism x,y,z,n,r,h                                prism.stp" << std::endl;
 	std::cerr << " occ-csg --create cone x1,y1,z1,r1,r2,h                            cone.stp" << std::endl;
 	std::cerr << " occ-csg --create helix r,profile_r,pitch,num_revolutions          helix.stp" << std::endl;
+	std::cerr << " occ-csg --create helix r,profile_face.stp,pitch,num_revolutions   helix.stp" << std::endl;
 	std::cerr << " occ-csg --create polygons x1,y1,z1,x2,y2,z2,... p1v1,p1v2,p1v3,...:p2v1,p2v2,p2v3,... polygons.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:circle x,y,r                                  2dcircle.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:polygon x1,y1,x2,y2,...                       2dpolygon.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
     std::cerr << " occ-csg --create 2d:prism x,y,n,r                                 2dprism.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:round-rect x,y,width,height,corner_r          2drectangle.stp" << std::endl;
 	//std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
@@ -1869,9 +2176,10 @@ void usage() {
 	std::cerr << std::endl;
 	std::cerr << "Geometric Transformation:" << std::endl;
 	std::cerr << std::endl;
-	std::cerr << " occ-csg --transform matrix    t1,t2,t3,...,t12 file1.stp file1-transformed.stp" << std::endl;
-	std::cerr << " occ-csg --transform translate x,y,z            file1.stp file1-translated.stp" << std::endl;
-	std::cerr << " occ-csg --transform scale     sx,sy,sz         file1.stp file1-scaled.stp" << std::endl;
+	std::cerr << " occ-csg --transform translate x,y,z                               file1.stp file1-translated.stp" << std::endl;
+	std::cerr << " occ-csg --transform scale     sx,sy,sz                            file1.stp file1-scaled.stp" << std::endl;
+    std::cerr << " occ-csg --transform rot       dir_x,dir_y,dir_z,angle file1.stp   file1-rotated.stp" << std::endl;
+	std::cerr << " occ-csg --transform matrix    t1,t2,t3,...,t12 file1.stp          file1-transformed.stp" << std::endl;
 	std::cerr << std::endl;
 	std::cerr << "Boolean Operators, Constructive Solid Geometry (CSG):" << std::endl;
 	std::cerr << std::endl;
@@ -1886,9 +2194,10 @@ void usage() {
     std::cerr << " occ-csg --edit chamfer-edges radius shape.stp shape-chamfered.stp" << std::endl;
 	std::cerr << std::endl;
 	std::cerr << std::endl;
-	std::cerr << "Bounds:" << std::endl;
+	std::cerr << "Shape Info:" << std::endl;
 	std::cerr << std::endl;
-	std::cerr << " occ-csg --bounds file.stp" << std::endl;
-	std::cerr << " occ-csg --bounds file.stp bounds.stp" << std::endl;
+	std::cerr << " occ-csg --info bounds file.stp      " << std::endl;
+	std::cerr << " occ-csg --info bounds file.stp      bounds.stp" << std::endl;
+	std::cerr << " occ-csg --info volume file.stp tol  " << std::endl;
 	std::cerr << std::endl;
 }

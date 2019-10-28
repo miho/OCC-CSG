@@ -2,6 +2,7 @@
 /build
 /build7
 /cmake-build-debug
+/cmake-build-releas
 /cmake-build-release
 /installation
 .idea
