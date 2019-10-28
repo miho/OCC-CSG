@@ -11,7 +11,7 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
-        checkVersion("0.9.9.1");
+        checkVersion("0.9.9.2");
         volumeObjTest("box", "-1,-1,-1,1,1,1", 0.1, 8.0, 1e-6);
         volumeObjTest("sphere", "0,0,0,1.0", 0.001, 4.189, 1e-2);
 
