@@ -21,25 +21,27 @@ public class Test {
         {
             Path tmpDir = Files.createTempDirectory("OCC-CSG_");
             String tmpDirName = tmpDir.toAbsolutePath().toString();
-            execute("--create", "box", "-1,-1,-1,1,1,1", tmpDirName+"/box.brep").throwIfInvalid("Cannot create box.");
-            execute("--create", "box", "-0.5,-0.5,-0.5,0.5,0.5,0.5", tmpDirName+"/box-small.brep").throwIfInvalid("Cannot create box.");
-            execute("--csg", "difference", tmpDirName+"/box.brep", tmpDirName+"/box-small.brep", tmpDirName+"/box-with-hole.brep").throwIfInvalid("Cannot compute difference.");
-            volumeFileTest(tmpDirName+"/box-with-hole.brep", 0.1, 7.0, 1e-6);
+            execute("--create", "box", "-1,-1,-1,1,1,1", tmpDirName + "/box.brep").throwIfInvalid("Cannot create box.");
+            execute("--create", "box", "-0.5,-0.5,-0.5,0.5,0.5,0.5", tmpDirName + "/box-small.brep")
+                    .throwIfInvalid("Cannot create box.");
+            execute("--csg", "difference", tmpDirName + "/box.brep", tmpDirName + "/box-small.brep",
+                    tmpDirName + "/box-with-hole.brep").throwIfInvalid("Cannot compute difference.");
+            volumeFileTest(tmpDirName + "/box-with-hole.brep", 0.1, 7.0, 1e-6);
         }
         // test cube + small cube (volume 8 + 1 = 9.0)
         {
             Path tmpDir = Files.createTempDirectory("OCC-CSG_");
             String tmpDirName = tmpDir.toAbsolutePath().toString();
-            execute("--create", "box", "-1,-1,-1,1,1,1", tmpDirName+"/box.brep").throwIfInvalid("Cannot create box.");
-            execute("--create", "box", "-2,-0.5,-0.5,-1,0.5,0.5", tmpDirName+"/box-small.brep").throwIfInvalid("Cannot create box.");
-            execute("--csg", "union", tmpDirName+"/box.brep", tmpDirName+"/box-small.brep", tmpDirName+"/box-with-hole.brep").throwIfInvalid("Cannot compute difference.");
-            volumeFileTest(tmpDirName+"/box-with-hole.brep", 0.1, 9.0, 1e-6);
+            execute("--create", "box", "-1,-1,-1,1,1,1", tmpDirName + "/box.brep").throwIfInvalid("Cannot create box.");
+            execute("--create", "box", "-2,-0.5,-0.5,-1,0.5,0.5", tmpDirName + "/box-small.brep")
+                    .throwIfInvalid("Cannot create box.");
+            execute("--csg", "union", tmpDirName + "/box.brep", tmpDirName + "/box-small.brep",
+                    tmpDirName + "/box-with-hole.brep").throwIfInvalid("Cannot compute difference.");
+            volumeFileTest(tmpDirName + "/box-with-hole.brep", 0.1, 9.0, 1e-6);
         }
     }
 
-    static void volumeFileTest(
-        String fileName, double tol,
-        double expectedVolume, double compareTol) throws Exception {
+    static void volumeFileTest(String fileName, double tol, double expectedVolume, double compareTol) throws Exception {
 
         System.out.println("------------------------------------");
         System.out.println("> Volume Test (File):");
@@ -47,12 +49,12 @@ public class Test {
         System.out.println("> expected-vol:  " + expectedVolume);
         System.out.println("------------------------------------");
 
-        execute((out,err)->{
+        execute((out, err) -> {
 
             String[] lines = out.split("\n");
-            String lastLine = lines[lines.length-1];
+            String lastLine = lines[lines.length - 1];
 
-            if(!lastLine.startsWith("> volume = ")) {
+            if (!lastLine.startsWith("> volume = ")) {
                 return false;
             }
 
@@ -60,15 +62,14 @@ public class Test {
 
             double converted = Double.parseDouble(lastLine);
 
-            return Math.abs(converted-expectedVolume) < compareTol;
+            return Math.abs(converted - expectedVolume) < compareTol;
 
-        }, "--info", "volume", fileName, ""+tol).showOutputAnd().
-          throwIfInvalid("Expected volume and compute volume differ! Expected: " + expectedVolume+".");
+        }, "--info", "volume", fileName, "" + tol).showOutputAnd()
+                .throwIfInvalid("Expected volume and compute volume differ! Expected: " + expectedVolume + ".");
     }
 
-    static void volumeObjTest(
-        String objName, String dimensions, double tol,
-        double expectedVolume, double compareTol) throws Exception {
+    static void volumeObjTest(String objName, String dimensions, double tol, double expectedVolume, double compareTol)
+            throws Exception {
 
         System.out.println("------------------------------------");
         System.out.println("> Volume Test (Obj):");
@@ -77,19 +78,17 @@ public class Test {
         System.out.println("> expected-vol:  " + expectedVolume);
         System.out.println("------------------------------------");
 
-
         Path tmpDir = Files.createTempDirectory("OCC-CSG_");
         String tmpDirName = tmpDir.toAbsolutePath().toString();
 
-        execute("--create", objName, dimensions, tmpDirName+"/vol.brep").
-          throwIfInvalid("Cannot create box shape.");
+        execute("--create", objName, dimensions, tmpDirName + "/vol.brep").throwIfInvalid("Cannot create box shape.");
 
-        execute((out,err)->{
+        execute((out, err) -> {
 
             String[] lines = out.split("\n");
-            String lastLine = lines[lines.length-1];
+            String lastLine = lines[lines.length - 1];
 
-            if(!lastLine.startsWith("> volume = ")) {
+            if (!lastLine.startsWith("> volume = ")) {
                 return false;
             }
 
@@ -97,60 +96,58 @@ public class Test {
 
             double converted = Double.parseDouble(lastLine);
 
-            return Math.abs(converted-expectedVolume) < compareTol;
+            return Math.abs(converted - expectedVolume) < compareTol;
 
-        }, "--info", "volume", tmpDirName+"/vol.brep", ""+tol).showOutputAnd().
-          throwIfInvalid("Expected volume and compute volume differ! Expected: " + expectedVolume+".");
+        }, "--info", "volume", tmpDirName + "/vol.brep", "" + tol).showOutputAnd()
+                .throwIfInvalid("Expected volume and compute volume differ! Expected: " + expectedVolume + ".");
     }
 
     static void checkVersion(String expectedVersion) {
-        Result res = execute((out,err)->out.trim().endsWith(expectedVersion), "--version");
+        Result res = execute((out, err) -> out.trim().endsWith(expectedVersion), "--version");
 
-        res.showOutputAnd().throwIfInvalid("Version does not match! Expected " + expectedVersion +".");
+        res.showOutputAnd().throwIfInvalid("Version does not match! Expected " + expectedVersion + ".");
     }
 
     static Result execute(String... args) {
-        return execute((out,err)->true, args);
+        return execute((out, err) -> true, args);
     }
 
-    static Result execute(BiFunction<String,String,Boolean> eval, String... args) {
+    static Result execute(BiFunction<String, String, Boolean> eval, String... args) {
 
         try {
             String cmdName = "../build/bin/occ-csg";
 
-            if(System.getProperty("os.name").toLowerCase().contains("win")) {
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
                 cmdName = "../build/bin/occ-csg.exe";
             }
 
-            String[] cmd = Stream.concat(Arrays.stream(new String[]{cmdName}),
-                        Arrays.stream(args)).toArray(String[]::new);
+            String[] cmd = Stream.concat(Arrays.stream(new String[] { cmdName }), Arrays.stream(args))
+                    .toArray(String[]::new);
 
-            System.out.print("> command: ");              
-            Arrays.stream(cmd).forEach(element->System.out.print(element + " ")); 
-            System.out.println();           
+            System.out.print("> command: ");
+            Arrays.stream(cmd).forEach(element -> System.out.print(element + " "));
+            System.out.println();
 
             ProcessBuilder builder = new ProcessBuilder(cmd);
             builder.redirectErrorStream(false);
             Process proc = builder.start();
 
-            BufferedReader stdInput = new BufferedReader(new 
-            InputStreamReader(proc.getInputStream()));
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
-            BufferedReader stdError = new BufferedReader(new 
-            InputStreamReader(proc.getErrorStream()));
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
 
             String out = "";
             String s = "";
             while ((s = stdInput.readLine()) != null) {
-                out+=s+"\n";
+                out += s + "\n";
             }
             String err = "";
             while ((s = stdError.readLine()) != null) {
-                err+=s+"\n";
+                err += s + "\n";
             }
 
             return new Result(out, err, eval.apply(out, err));
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             return Result.createInvalid(ex);
         }
     }
@@ -183,23 +180,23 @@ public class Test {
         }
 
         static Result createInvalid(Exception ex) {
-            return new Result("",Stream
-            .of(ex.getStackTrace())
-            .map(StackTraceElement::toString)
-            .collect(Collectors.joining("\n")) , false);
+            return new Result("",
+                    Stream.of(ex.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n")),
+                    false);
         }
 
         void throwIfInvalid(String reason) {
-            if(!this.valid) {
-                throw new RuntimeException(reason
-                 +"\n\nOutput:\n" + this.out
-                 + "\n\nError-Output:\n"+this.err);
+            if (!this.valid) {
+                throw new RuntimeException(
+                        reason
+                         + "\n\nOutput:\n\n" + (this.out.isEmpty()?"<NONE>\n":this.out+"\n")
+                         + "\n\nError-Output:\n\n" + (this.err.isEmpty()?"<NONE>\n":this.err));
             }
         }
 
         void showOutput() {
-            System.err.println("> Output:\n  -------\n" + out);
-            System.err.println("> Error-Output:\n  -------------\n" + err);
+            System.err.println("\n> Output:\n  ¯¯¯¯¯¯¯\n" + (this.out.isEmpty()?"<NONE>\n":this.out+"\n"));
+            System.err.println("\n> Error-Output:\n  ¯¯¯¯¯¯¯¯¯¯¯¯¯\n" + (this.err.isEmpty()?"<NONE>\n":this.err));
         }
 
         Result showOutputAnd() {
