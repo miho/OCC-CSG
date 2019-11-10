@@ -11,7 +11,7 @@ There is a Java library [VCSG](https://github.com/miho/VCSG) and the correspondi
 
 ## Installation
 
-To get started quickly download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64). On macOS occ-csg can be installed via [Homebrew](https://brew.sh):
+To get started quickly, download a [binary release](https://github.com/miho/OCC-CSG/releases) (available for Linux, macOS and Windows on x64). On macOS occ-csg can be installed via [Homebrew](https://brew.sh):
 
     brew install miho/tap/occ-csg
 
