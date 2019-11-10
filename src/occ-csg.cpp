@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Michael Hoffer <info@michaelhoffer.de>. All rights reserved.
+ * Copyright 2018-2019 Michael Hoffer <info@michaelhoffer.de>. All rights reserved.
  * 
  * This file is part of OCC-CSG.
  * 
