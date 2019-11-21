@@ -984,30 +984,31 @@ void csg(int argc, char *argv[]) {
 	// https://www.opencascade.com/sites/default/files/documents/release_notes_7.3.0.pdf
 	// https://dev.opencascade.org/index.php?q=node/1056
 	double fuzzyValue = 0.0;
+	bool fuzzyValueSet = false;
 
     if(argc >= 8) {
         fuzzyValue = parseDouble(argv[7], "fuzzyValue");
-
-		std::cout << "> WARNING: fuzzy value currently not supported" << std::endl;
+        fuzzyValueSet = true;
+		std::cout << "> WARNING: fuzzy value currently not tested" << std::endl;
     }
 
 	if(strcmp(argv[2],"union")==0) {
 		BRepAlgoAPI_Fuse csg(s1, s2);
 		// csg.SetUseOBB(true);
 		// csg.SetRunParallel(true);
-		// csg.SetFuzzyValue(fuzzyValue);
+        if(fuzzyValueSet) csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else if(strcmp(argv[2],"difference")==0) {
 		BRepAlgoAPI_Cut csg(s1, s2);
         // csg.SetUseOBB(true);
         // csg.SetRunParallel(true);
-        // csg.SetFuzzyValue(fuzzyValue);
+        if(fuzzyValueSet) csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else if(strcmp(argv[2],"intersection")==0) {
 		BRepAlgoAPI_Common csg(s1, s2);
         // csg.SetUseOBB(true);
         // csg.SetRunParallel(true);
-        // csg.SetFuzzyValue(fuzzyValue);
+        if(fuzzyValueSet) csg.SetFuzzyValue(fuzzyValue);
 		res = csg.Shape();
 	} else {
         error("unknown command '" + std::string(argv[2]) + "'!");
