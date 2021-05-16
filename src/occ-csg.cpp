@@ -33,6 +33,8 @@
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
+#include <ShapeUpgrade_UnifySameDomain.hxx>
 
 // CSG operators
 #include <BRepAlgoAPI_Cut.hxx>
@@ -153,6 +155,7 @@ TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createRoundRect2d(double length, double height, double corner_radius);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 TopoDS_Shape createPrism2d(double x, double y, int n, double r);
+TopoDS_Shape extrudeSweep(double angle, std::string const &filename);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 
 
@@ -637,6 +640,25 @@ void create(int argc, char *argv[]) {
 
 		save(filename,shape, stlTOL);
 
+       } else if(strcmp(argv[2],"extrusion:sweep")==0) {
+ 
+               if(argc != 6 && argc !=7) {
+            error("wrong number of arguments!");
+               }
+
+               TopoDS_Shape shape = extrudeSweep(parseDouble(argv[3], "an"), argv[4]);
+ 
+               std::string filename = argv[5];
+
+               double stlTOL;
+
+               if(argc == 7) {
+                       stlTOL = parseDouble(argv[6], "stlTOL");
+               } else {
+                       stlTOL = 0.5;
+               }
+
+               save(filename,shape, stlTOL);
 	} else if(strcmp(argv[2],"2d:circle")==0) {
 
 		if(argc != 5 && argc !=6) {
@@ -1708,6 +1730,13 @@ TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &fil
 	return BRepPrimAPI_MakePrism(face, direction);
 }
 
+TopoDS_Shape extrudeSweep(double angle, std::string const &filename) {
+
+       TopoDS_Shape face = load(filename);
+
+       return BRepPrimAPI_MakeRevol(face, gp_Ax1(gp_Pnt(), gp_Dir()), angle*(M_PI/180.0));
+}
+
 TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r) {
 	gp_Dir dir(dx,dy,dz);
 	gp_Pnt point(x,y,z);
@@ -2166,6 +2195,7 @@ void usage() {
 	//std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
+	std::cerr << " occ-csg --create extrusion:sweep an                               2dpath.stp extrude.stp" << std::endl;
 	std::cerr << "" << std::endl;
 	std::cerr << "Format Conversion:" << std::endl;
 	std::cerr  << std::endl;
