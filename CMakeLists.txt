@@ -35,10 +35,16 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Find freetype libraries on Linux (don't know why the one provided by the static occt dep doesn't work on Linux)
 IF(UNIX AND NOT APPLE)
-    find_library(FreeType REQUIRED)
+    find_library(FreeType REQUIRED
+      NAMES freetype
+      HINTS /usr/lib/
+    )
     
     find_path (FONTCONFIG_INCLUDE_DIRS "fontconfig/fontconfig.h")
-    find_library(FontConfig REQUIRED)
+    find_library(FontConfig REQUIRED
+      NAMES fontconfig
+      HINTS /usr/lib/
+    )
     
     
 #    include_directories(${FREETYPE_INCLUDE_DIRS})
