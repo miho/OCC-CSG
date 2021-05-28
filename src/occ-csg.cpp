@@ -20,6 +20,8 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <ctype.h>
+#include <time.h>
 // #include <filesystem> currently still unusable
 
 // numbers, limits and errors
@@ -33,11 +35,15 @@
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
+#include <ShapeUpgrade_UnifySameDomain.hxx>
 
 // CSG operators
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepAlgoAPI_Common.hxx>
+
+#include <BRepCheck_Analyzer.hxx>
 
 // sewing & solid
 #include <BRepBuilderAPI_Sewing.hxx>
@@ -128,11 +134,11 @@
 
 #define MAX2(X, Y)	(  Abs(X) > Abs(Y)? Abs(X) : Abs(Y) )
 #define MAX3(X, Y, Z)	( MAX2 ( MAX2(X,Y) , Z) )
-
+#define EPSILON  (0.0001f)
 
 
 // version
-#define VERSION "0.9.9.2"
+#define VERSION "0.9.9.2.1gg"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);
@@ -153,6 +159,7 @@ TopoDS_Shape createRect2d(double minX, double minY, double maxX, double maxY);
 TopoDS_Shape createRoundRect2d(double length, double height, double corner_radius);
 TopoDS_Shape createText2d(std::string const &font, double fSize, double x, double y, std::string const& text);
 TopoDS_Shape createPrism2d(double x, double y, int n, double r);
+TopoDS_Shape extrudeSweep(double angle, char axis, std::string const &filename);
 std::vector<TopoDS_Shape> splitShape(TopoDS_Shape const &shape);
 
 
@@ -173,7 +180,7 @@ void notImplemented();
 void create(int argc, char *argv[]);
 void transform(int argc, char *argv[]);
 void convert(int argc, char *argv[]);
-void csg(int argc, char *argv[]);
+int  csg(int argc, char *argv[]);
 void info(int argc, char *argv[]);
 void bounds(int argc, char *argv[]);
 void editShape(int argc, char *argv[]);
@@ -229,7 +236,9 @@ int parseInt(std::string const &str, std::string const & varName);
 // the CLI appliction
 int main(int argc, char *argv[])
 {
-	
+        int ret=0;
+
+        srand((unsigned int)clock());	
 	if(argc > 1 && strcmp(argv[1], "--version")==0) { version(); exit(0); }
 	
 	std::cout << "-------------------------------------------------------------" << std::endl;
@@ -246,13 +255,13 @@ int main(int argc, char *argv[])
 	if(strcmp(argv[1], "--create")==0) create(argc,argv);
 	else if(strcmp(argv[1], "--transform")==0) transform(argc,argv);
 	else if(strcmp(argv[1], "--convert")==0) convert(argc,argv);
-	else if(strcmp(argv[1], "--csg")==0) csg(argc,argv);
+	else if(strcmp(argv[1], "--csg")==0) ret=csg(argc,argv);
 	else if(strcmp(argv[1], "--info")==0) info(argc,argv);
 	else if(strcmp(argv[1], "--edit")==0) editShape(argc,argv);
 	else if(strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) usage();
 	else error("unknown command '" + std::string(argv[1]) + "'!");
 
-	return 0;
+	return ret;
 }
 
 TopoDS_Shape importSTL( std::string const &file )
@@ -637,6 +646,25 @@ void create(int argc, char *argv[]) {
 
 		save(filename,shape, stlTOL);
 
+       } else if(strcmp(argv[2],"extrusion:sweep")==0) {
+ 
+               if(argc != 7 && argc !=8) {
+            error("wrong number of arguments!");
+               }
+
+               TopoDS_Shape shape = extrudeSweep(parseDouble(argv[3], "an"), toupper(argv[4][0]), argv[5]);
+ 
+               std::string filename = argv[6];
+
+               double stlTOL;
+
+               if(argc == 8) {
+                       stlTOL = parseDouble(argv[7], "stlTOL");
+               } else {
+                       stlTOL = 0.5;
+               }
+
+               save(filename,shape, stlTOL);
 	} else if(strcmp(argv[2],"2d:circle")==0) {
 
 		if(argc != 5 && argc !=6) {
@@ -833,7 +861,8 @@ void create(int argc, char *argv[]) {
 		save(filename,shape, stlTOL);
 
 	} else if(strcmp(argv[2],"polygons")==0) {
-		if(argc != 6 && argc !=7) {
+		if(argc != 5 && argc !=6) {
+		std::cout << " argc= " << argc << std::endl;
             error("wrong number of arguments!");
 		}
 
@@ -968,7 +997,7 @@ void convert(int argc, char *argv[]) {
 
 }
 
-void csg(int argc, char *argv[]) {
+int csg(int argc, char *argv[]) {
 	if(argc < 6 || argc > 8) {
         error("wrong number of arguments!");
 	}
@@ -1014,11 +1043,15 @@ void csg(int argc, char *argv[]) {
         error("unknown command '" + std::string(argv[2]) + "'!");
 	}
 
+        BRepCheck_Analyzer bcs(res);
+        bcs.Init(res);
+        if(!bcs.IsValid()) error("invalid shape after csg!");
+
 	// perform healing in case the boolean operations
 	// cause problems
 	ShapeFix_Shape FixShape;
 	FixShape.Init(res);
-	FixShape.Perform();
+        FixShape.Perform();
 	res = FixShape.Shape();
 
 	std::cout << " -> done." << std::endl;
@@ -1032,6 +1065,8 @@ void csg(int argc, char *argv[]) {
 	}
 
 	save(argv[5], res, stlTOL);
+	
+	return(0);
 }
 
 void info(int argc, char *argv[]) {
@@ -1233,7 +1268,7 @@ void transform(int argc, char *argv[]) {
 			}
 		}
 
-		if(m[0][0] == m[1][1] && m[1][1] == m[2][2]) {
+		if(fabs(m[0][0]) == fabs(m[1][1]) && fabs(m[1][1]) == fabs(m[2][2])) {
 			std::cout << "uniform scale, using transform" << std::endl;
 			shape = BRepBuilderAPI_Transform(shape, tMat);
 		} else {
@@ -1418,15 +1453,35 @@ TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, do
 }
 
 TopoDS_Shape createSphere(double x1, double y1, double z1, double r) {
-	gp_Pnt center(x1,y1,z1);
-	BRepPrimAPI_MakeSphere sphereMaker(center,r);
-	TopoDS_Shape sphere = sphereMaker.Shape();
+	gp_Pnt origo(0,0,0);
+	BRepPrimAPI_MakeSphere sphereMaker(origo,r);
+
+        // rotate random angle around Z axis
+        gp_Trsf face_rot;
+        int randeg=rand()%359;
+        std::cerr << "random rotation axis Z angle " << randeg << std::endl;
+        gp_Ax1 A=gp_Ax1();
+        double ran=((double)randeg)*(M_PI/180.0); // random rotation around z axis
+        face_rot.SetRotation(A, ran);
+        BRepBuilderAPI_Transform rot(sphereMaker.Shape(), face_rot);
+
+	gp_Trsf tMat;
+	tMat.SetTranslation(gp_Vec(x1, y1, z1));
+
+	TopoDS_Shape sphere = BRepBuilderAPI_Transform(rot.Shape(), tMat);
 	return sphere;
 }
 
 TopoDS_Shape createCylinder(double r, double h) {
 	BRepPrimAPI_MakeCylinder cylinderMaker(r,h);
-	TopoDS_Shape cylinder = cylinderMaker.Shape();
+        gp_Trsf face_rot;
+        int randeg=rand()%359;
+        std::cerr << "random rotation axis Z angle " << randeg << std::endl;
+        gp_Ax1 A=gp_Ax1();
+        double ran=((double)randeg)*(M_PI/180.0); // random rotation around z axis
+        face_rot.SetRotation(A, ran);
+        BRepBuilderAPI_Transform rot(cylinderMaker.Shape(), face_rot);
+	TopoDS_Shape cylinder = rot.Shape();
 	return cylinder;
 }
 
@@ -1438,7 +1493,14 @@ TopoDS_Shape createCylinder(double r, double h, double angle) {
 
 TopoDS_Shape createCone(double r1, double r2, double h) {
 	BRepPrimAPI_MakeCone coneMaker(r1,r2,h);
-	TopoDS_Shape cone = coneMaker.Shape();
+        gp_Trsf face_rot;
+        int randeg=rand()%359;
+        std::cerr << "random rotation axis Z angle " << randeg << std::endl;
+        gp_Ax1 A=gp_Ax1();
+        double ran=((double)randeg)*(M_PI/180.0); // random rotation around z axis
+        face_rot.SetRotation(A, ran);
+        BRepBuilderAPI_Transform rot(coneMaker.Shape(), face_rot);
+	TopoDS_Shape cone = rot.Shape();
 	return cone;
 }
 
@@ -1708,6 +1770,26 @@ TopoDS_Shape extrudeFile(double ex, double ey, double ez, std::string const &fil
 	return BRepPrimAPI_MakePrism(face, direction);
 }
 
+TopoDS_Shape extrudeSweep(double angle, char axis, std::string const &filename) {
+
+      TopoDS_Shape face = load(filename);
+
+      if(fabs(angle-360.0)<EPSILON)
+      {
+        gp_Ax1 A=(axis=='Z'?gp_Ax1():axis=='X'?gp_Ax1(gp_Pnt(),gp_Dir()):gp_Ax1(gp_Pnt(),gp_Dir(0,1,0)));
+        TopoDS_Shape revol=BRepPrimAPI_MakeRevol(face,A);
+        gp_Trsf face_rot;
+        int randeg=rand()%359;
+        std::cerr << "random rotation axis " << axis << " angle " << randeg << std::endl;
+        double ran=((double)randeg)*(M_PI/180.0); // random rotation around the same axis
+        face_rot.SetRotation(A, ran);
+        BRepBuilderAPI_Transform rot(revol, face_rot);
+        
+        return rot.Shape();
+      }
+      else return BRepPrimAPI_MakeRevol(face, (axis=='Z'?gp_Ax1():axis=='X'?gp_Ax1(gp_Pnt(),gp_Dir()):gp_Ax1(gp_Pnt(),gp_Dir(0,1,0))), angle*(M_PI/180.0));
+}
+
 TopoDS_Shape createCircle(double x, double y, double z, double dx, double dy, double dz, double r) {
 	gp_Dir dir(dx,dy,dz);
 	gp_Pnt point(x,y,z);
@@ -1960,7 +2042,7 @@ double computeVolume(TopoDS_Shape shape, double tol) {
 
             sum+=v1.Dot(v2.Crossed(v3)) / 6.0;
         }
-    } // end for
+    }
 
     return sum;
 }
@@ -2163,9 +2245,10 @@ void usage() {
 	std::cerr << " occ-csg --create 2d:rect x1,y1,x2,y2                              2drectangle.stp" << std::endl;
     std::cerr << " occ-csg --create 2d:prism x,y,n,r                                 2dprism.stp" << std::endl;
 	std::cerr << " occ-csg --create 2d:round-rect x,y,width,height,corner_r          2drectangle.stp" << std::endl;
-	//std::cerr << " occ-csg --create 2d:text font.ttf 12.0 x,y \"text to render\"       2dtext.stp" << std::endl;
+	std::cerr << " occ-csg --create 2d:text font.ttf font-size x,y \"text to render\"       2dtext.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:polygon ex,ey,ez,x1,y1,z1,x2,y2,z2,... extrude.stp" << std::endl;
 	std::cerr << " occ-csg --create extrusion:file ex,ey,ez                          2dpath.stp extrude.stp" << std::endl;
+	std::cerr << " occ-csg --create extrusion:sweep an [xyz]                         2dpath.stp extrude.stp" << std::endl;
 	std::cerr << "" << std::endl;
 	std::cerr << "Format Conversion:" << std::endl;
 	std::cerr  << std::endl;
