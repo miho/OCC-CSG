@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Michael Hoffer <info@michaelhoffer.de>. All rights reserved.
+ * Copyright 2018-2021 Michael Hoffer <info@michaelhoffer.de>. All rights reserved.
  * 
  * This file is part of OCC-CSG.
  * 
@@ -132,7 +132,7 @@
 
 
 // version
-#define VERSION "0.9.9.2"
+#define VERSION "0.9.9.3"
 
 // minimal API for primitive objects
 TopoDS_Shape createBox(double x1, double y1, double z1, double x2, double y2, double z2);

@@ -1,0 +1,14 @@
+{
+    "name": "occ-csg",
+    "version-string": "0.9.9.3",
+    "dependencies": [
+      {
+        "name": "opencascade",
+        "default-features": false,
+        "features": [
+          "freeimage",
+          "tbb"
+        ]
+      }
+    ]
+}

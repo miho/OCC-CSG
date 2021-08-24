@@ -17,7 +17,8 @@ find_package(OpenCASCADE COMPONENTS Visualization REQUIRED)
 include_directories(${OpenCASCADE_INCLUDE_DIR})
 MESSAGE("OCC-Include-Dir: ${OpenCASCADE_INCLUDE_DIR}")
 link_directories(${OpenCASCADE_LIBRARY_DIR})
-MESSAGE("OCC-Lib-Dir-Dir: ${OpenCASCADE_LIBRARY_DIR}")
+MESSAGE("OCC-Lib-Dir: ${OpenCASCADE_LIBRARY_DIR}")
+MESSAGE("OCC-Libs: ${OpenCASCADE_LIBRARIES}")
 
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
@@ -45,7 +46,7 @@ IF(UNIX AND NOT APPLE)
 #    link_directories(${FREETYPE_LIBRARY_DIR})
 ENDIF()
 
-set(CMAKE_CXX_STANDARD 11) # C++11...
+set(CMAKE_CXX_STANDARD 20) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 

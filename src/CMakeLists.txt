@@ -6,54 +6,56 @@ CreateExecutable(occ-csg.cpp
 
 #${OpenCASCADE_LIBRARIES}
 
-TKSTL       # stl file support
+# TKSTL       # stl file support
 
 # order of the library might matter for static linking
 # remember to put base libs such as kernel and math at the end
 
-TKXDESTEP
-TKBinXCAF
-TKXmlXCAF
-TKXDEIGES
-TKXCAF
-TKIGES
-TKSTEP
-TKSTEP209
-TKSTEPAttr
-TKSTEPBase
-TKXSBase 
-TKStd 
-TKStdL
-TKXml 
-TKBin 
-TKXmlL 
-TKBinL 
-TKCAF 
-TKXCAF 
-TKLCAF 
-TKCDF 
-TKMeshVS 
-TKOpenGl 
-TKV3d
-TKService
-TKXMesh 
-TKMesh 
-TKOffset 
-TKFeat
-TKFillet 
-TKHLR 
-TKBool
-TKBO
-TKShHealing
-TKPrim
-TKTopAlgo
-TKGeomAlgo
-TKBRep
-TKGeomBase
-TKG3d
-TKG2d
-TKMath
-TKernel
+# TKXDESTEP
+# TKBinXCAF
+# TKXmlXCAF
+# TKXDEIGES
+# TKXCAF
+# TKIGES
+# TKSTEP
+# TKSTEP209
+# TKSTEPAttr
+# TKSTEPBase
+# TKXSBase 
+# TKStd 
+# TKStdL
+# TKXml 
+# TKBin 
+# TKXmlL 
+# TKBinL 
+# TKCAF 
+# TKXCAF 
+# TKLCAF 
+# TKCDF 
+# TKMeshVS 
+# TKOpenGl 
+# TKV3d
+# TKService
+# TKXMesh 
+# TKMesh 
+# TKOffset 
+# TKFeat
+# TKFillet 
+# TKHLR 
+# TKBool
+# TKBO
+# TKShHealing
+# TKPrim
+# TKTopAlgo
+# TKGeomAlgo
+# TKBRep
+# TKGeomBase
+# TKG3d
+# TKG2d
+# TKMath
+# TKernel
+
+${OpenCASCADE_LIBRARIES}
 
 freetype
 

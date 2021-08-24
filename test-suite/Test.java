@@ -11,7 +11,7 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
-        checkVersion("0.9.9.2");
+        checkVersion("0.9.9.3");
         volumeObjTest("box", "-1,-1,-1,1,1,1", 0.1, 8.0, 1e-6);
         volumeObjTest("sphere", "0,0,0,1.0", 0.001, 4.189, 1e-2);
 
@@ -118,7 +118,7 @@ public class Test {
             String cmdName = "../build/bin/occ-csg";
 
             if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                cmdName = "../build/bin/occ-csg.exe";
+                cmdName = "../build/bin/Release/occ-csg.exe";
             }
 
             String[] cmd = Stream.concat(Arrays.stream(new String[] { cmdName }), Arrays.stream(args))
